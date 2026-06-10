@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -26,7 +26,26 @@ export default function DashboardClient({
   const [erro, setErro] = useState("");
   const [abaSelecionada, setAbaSelecionada] = useState<"chamada" | "alunos" | "historico">("chamada");
 
+  const [presentesAoVivo, setPresentesAoVivo] = useState<{ nome: string; marcadaEm: string }[]>([]);
+
   const appUrl = typeof window !== "undefined" ? window.location.origin : "";
+
+  const atualizarPresentes = useCallback(async () => {
+    if (!sessao) return;
+    const res = await fetch("/api/sessao/ativa");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data?.attendances) {
+      setPresentesAoVivo(data.attendances.map((a: any) => ({ nome: a.crismando.nome, marcadaEm: a.marcadaEm })));
+    }
+  }, [sessao]);
+
+  useEffect(() => {
+    if (!sessao) { setPresentesAoVivo([]); return; }
+    atualizarPresentes();
+    const intervalo = setInterval(atualizarPresentes, 5000);
+    return () => clearInterval(intervalo);
+  }, [sessao, atualizarPresentes]);
 
   async function abrirChamada() {
     const res = await fetch("/api/sessao", { method: "POST" });
@@ -106,6 +125,27 @@ export default function DashboardClient({
               >
                 Encerrar Chamada
               </button>
+
+              {/* Lista ao vivo */}
+              <div className="w-full border-t pt-4">
+                <p className="text-sm font-semibold text-gray-600 mb-2">
+                  Presentes: <span className="text-indigo-600">{presentesAoVivo.length}</span>
+                  {alunos.length > 0 && <span className="text-gray-400"> / {alunos.length}</span>}
+                </p>
+                <ul className="w-full divide-y text-sm max-h-48 overflow-y-auto">
+                  {presentesAoVivo.map((p) => (
+                    <li key={p.nome} className="flex justify-between py-1.5">
+                      <span className="text-gray-700">✓ {p.nome}</span>
+                      <span className="text-gray-400 text-xs">
+                        {new Date(p.marcadaEm).toLocaleTimeString("pt-BR")}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {presentesAoVivo.length === 0 && (
+                  <p className="text-xs text-gray-400 text-center py-2">Aguardando primeiro aluno...</p>
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-4 p-6 bg-white rounded-xl shadow">
