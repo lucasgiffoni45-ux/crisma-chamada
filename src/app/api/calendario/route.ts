@@ -31,23 +31,25 @@ export async function POST(req: NextRequest) {
   const year = Number(ano);
   if (!year) return NextResponse.json({ error: "Ano inválido" }, { status: 400 });
 
-  // Encontra todos os sábados do ano (getDay() === 6).
+  // Encontra todos os sábados do ano usando UTC (getUTCDay() === 6) e fixa o
+  // horário em 12:00 UTC. Assim o fuso do Brasil (UTC-3) nunca empurra a data
+  // para o dia anterior — o que antes fazia aparecer sexta no lugar de sábado.
   const datas: Date[] = [];
-  const d = new Date(year, 0, 1);
-  while (d.getDay() !== 6) d.setDate(d.getDate() + 1); // primeiro sábado
-  for (; d.getFullYear() === year; d.setDate(d.getDate() + 7)) {
+  const d = new Date(Date.UTC(year, 0, 1, 12, 0, 0));
+  while (d.getUTCDay() !== 6) d.setUTCDate(d.getUTCDate() + 1); // primeiro sábado
+  for (; d.getUTCFullYear() === year; d.setUTCDate(d.getUTCDate() + 7)) {
     datas.push(new Date(d));
   }
 
-  let criados = 0;
-  for (const data of datas) {
-    const res = await prisma.calendarioSabado.upsert({
-      where: { data },
-      update: {},
-      create: { data, temEncontro: true, recesso: false },
-    });
-    if (res) criados++;
-  }
+  // Limpa os sábados já gerados deste ano (evita duplicatas e remove dados
+  // antigos com horário errado) antes de recriar.
+  await prisma.calendarioSabado.deleteMany({
+    where: { data: { gte: new Date(`${year}-01-01T00:00:00Z`), lte: new Date(`${year}-12-31T23:59:59Z`) } },
+  });
+  await prisma.calendarioSabado.createMany({
+    data: datas.map((data) => ({ data, temEncontro: true, recesso: false })),
+    skipDuplicates: true,
+  });
   await registrarLog(session, "gerou calendário do ano", String(year));
   return NextResponse.json({ ok: true, total: datas.length });
 }

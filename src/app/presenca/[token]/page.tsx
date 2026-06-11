@@ -43,7 +43,7 @@ export default function PresencaPage() {
       <Tela titulo="Confirmar Presença" subtitulo="Faça login com sua conta Google para registrar presença.">
         <button
           onClick={() => signIn("google", { callbackUrl: `/presenca/${token}` })}
-          className="mt-4 rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700 transition"
+          className="mt-4 rounded-lg bg-violet-600 px-6 py-3 font-semibold text-white hover:bg-violet-700 transition"
         >
           Entrar com Google
         </button>
@@ -66,7 +66,7 @@ export default function PresencaPage() {
   return <Tela titulo="Carregando..." subtitulo="" />;
 }
 
-function Tela({ titulo, subtitulo, cor = "text-indigo-700", children }: {
+function Tela({ titulo, subtitulo, cor = "text-violet-700", children }: {
   titulo: string; subtitulo: string; cor?: string; children?: React.ReactNode;
 }) {
   return (

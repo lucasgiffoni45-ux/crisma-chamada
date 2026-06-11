@@ -15,8 +15,9 @@ export default async function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-indigo-700">Crisma — Chamada</h1>
-        <p className="mt-2 text-gray-500">Sistema de presença para a catequese</p>
+        <p className="text-2xl text-amber-600 mb-1">✝</p>
+        <h1 className="text-3xl font-bold text-violet-800">Crisma — Chamada</h1>
+        <p className="mt-2 text-stone-500">Sistema de presença para a catequese</p>
       </div>
 
       {session ? (
@@ -32,7 +33,7 @@ export default async function Home() {
       ) : (
         <Link
           href="/api/auth/signin"
-          className="rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700 transition"
+          className="rounded-lg bg-violet-600 px-6 py-3 font-semibold text-white hover:bg-violet-700 transition"
         >
           Entrar com Google
         </Link>

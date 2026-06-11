@@ -18,14 +18,17 @@ export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais,
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-indigo-700">Painel da Coordenadora</h1>
-        <a href="/api/auth/signout" className="text-sm text-gray-400 hover:text-gray-600">Sair</a>
+        <div className="flex items-center gap-2">
+          <span className="text-amber-600 text-xl">✝</span>
+          <h1 className="text-2xl font-bold text-violet-800">Painel da Coordenadora</h1>
+        </div>
+        <a href="/api/auth/signout" className="text-sm text-stone-400 hover:text-stone-600">Sair</a>
       </div>
 
       <div className="flex gap-1 mb-6 border-b overflow-x-auto">
         {(["turmas", "formadores", "calendario", "historico", "log"] as const).map((a) => (
           <button key={a} onClick={() => setAba(a)}
-            className={`px-3 py-2 text-sm font-medium whitespace-nowrap transition ${aba === a ? "border-b-2 border-indigo-600 text-indigo-600" : "text-gray-500 hover:text-gray-700"}`}>
+            className={`px-3 py-2 text-sm font-medium whitespace-nowrap transition ${aba === a ? "border-b-2 border-violet-600 text-violet-600" : "text-gray-500 hover:text-gray-700"}`}>
             {a === "turmas" ? "Turmas" : a === "formadores" ? "Formadores" : a === "calendario" ? "Calendário" : a === "historico" ? "Histórico" : "Registro"}
           </button>
         ))}
@@ -62,7 +65,7 @@ function AbaTurmas({ turmas, setTurmas }: { turmas: Turma[]; setTurmas: (t: Turm
     <div className="space-y-4">
       <form onSubmit={criar} className="flex gap-2 bg-white p-4 rounded-xl shadow">
         <input value={nome} onChange={(e) => setNome(e.target.value)} required placeholder="Nome da turma (ex: Turma A)" className="border rounded-lg px-3 py-2 text-sm flex-1" />
-        <button className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white text-sm hover:bg-indigo-700">Criar</button>
+        <button className="rounded-lg bg-violet-600 px-4 py-2 font-semibold text-white text-sm hover:bg-violet-700">Criar</button>
       </form>
       <div className="bg-white rounded-xl shadow divide-y">
         {turmas.length === 0 && <p className="p-4 text-sm text-gray-400 text-center">Nenhuma turma.</p>}
@@ -118,7 +121,7 @@ function AbaFormadores({ formadores, setFormadores, turmas }: { formadores: Form
         <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome" className="border rounded-lg px-3 py-2 text-sm" />
         <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required placeholder="E-mail (conta Google)" className="border rounded-lg px-3 py-2 text-sm" />
         {erro && <p className="text-red-500 text-sm">{erro}</p>}
-        <button className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white text-sm hover:bg-indigo-700">Cadastrar</button>
+        <button className="rounded-lg bg-violet-600 px-4 py-2 font-semibold text-white text-sm hover:bg-violet-700">Cadastrar</button>
       </form>
       <div className="bg-white rounded-xl shadow divide-y">
         {formadores.length === 0 && <p className="p-4 text-sm text-gray-400 text-center">Nenhum formador.</p>}
@@ -136,7 +139,7 @@ function AbaFormadores({ formadores, setFormadores, turmas }: { formadores: Form
                 const atribuido = f.turmas.some((x) => x.turmaId === t.id);
                 return (
                   <button key={t.id} onClick={() => alternarTurma(f.id, t.id, !atribuido)}
-                    className={`text-xs px-2 py-1 rounded-full border ${atribuido ? "bg-indigo-600 text-white border-indigo-600" : "text-gray-500 border-gray-300"}`}>
+                    className={`text-xs px-2 py-1 rounded-full border ${atribuido ? "bg-violet-600 text-white border-violet-600" : "text-gray-500 border-gray-300"}`}>
                     {t.nome}
                   </button>
                 );
@@ -172,7 +175,7 @@ function AbaCalendario({ sabados, setSabados, ano }: { sabados: Sabado[]; setSab
       {sabados.length === 0 ? (
         <div className="bg-white rounded-xl shadow p-6 text-center">
           <p className="text-gray-500 mb-3">Calendário de {ano} ainda não gerado.</p>
-          <button onClick={gerar} disabled={gerando} className="rounded-lg bg-indigo-600 px-6 py-2 font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
+          <button onClick={gerar} disabled={gerando} className="rounded-lg bg-violet-600 px-6 py-2 font-semibold text-white hover:bg-violet-700 disabled:opacity-50">
             {gerando ? "Gerando..." : `Gerar sábados de ${ano}`}
           </button>
         </div>
@@ -181,7 +184,7 @@ function AbaCalendario({ sabados, setSabados, ano }: { sabados: Sabado[]; setSab
           {sabados.map((s) => (
             <div key={s.id} className="px-4 py-3 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-sm">{new Date(s.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "long" })}</span>
+                <span className="font-medium text-sm">{new Date(s.data).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", timeZone: "UTC" })}</span>
                 <div className="flex gap-1">
                   <button onClick={() => atualizar(s, { temEncontro: true, recesso: false })}
                     className={`text-xs px-2 py-1 rounded ${s.temEncontro && !s.recesso ? "bg-green-600 text-white" : "bg-gray-100 text-gray-500"}`}>Encontro</button>
@@ -207,12 +210,12 @@ function AbaHistorico({ encontros }: { encontros: Encontro[] }) {
   return (
     <div className="space-y-4">
       <div className="text-center">
-        <a href="/api/relatorio" download className="text-sm text-indigo-500 hover:underline">⬇ Exportar todas as presenças (CSV)</a>
+        <a href="/api/relatorio" download className="text-sm text-violet-500 hover:underline">⬇ Exportar todas as presenças (CSV)</a>
       </div>
       {encontros.length === 0 && <p className="text-sm text-gray-400 text-center">Nenhum encontro realizado ainda.</p>}
       {encontros.map((e) => (
         <div key={e.id} className="bg-white rounded-xl shadow p-4">
-          <p className="font-semibold text-sm text-gray-700">{e.turma.nome} — {new Date(e.data).toLocaleDateString("pt-BR")}</p>
+          <p className="font-semibold text-sm text-gray-700">{e.turma.nome} — {new Date(e.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</p>
           {e.tema && <p className="text-xs text-gray-500">Tema: {e.tema}</p>}
           <p className="text-xs text-gray-400 mb-1">{e.attendances.length} presença(s)</p>
           <p className="text-xs text-gray-600">{e.attendances.map((a) => a.crismando.nome).join(", ")}</p>

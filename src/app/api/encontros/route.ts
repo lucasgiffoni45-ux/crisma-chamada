@@ -52,9 +52,14 @@ export async function POST(req: NextRequest) {
     data: { ativa: false, fechadoEm: new Date() },
   });
 
+  // Datas vindas de <input type="date"> são "YYYY-MM-DD". Fixamos 12:00 UTC
+  // para o fuso do Brasil não mostrar o dia anterior (sábado virar sexta).
+  const dataEncontro = /^\d{4}-\d{2}-\d{2}$/.test(String(data))
+    ? new Date(`${data}T12:00:00Z`)
+    : new Date(data);
   const encontro = await prisma.encontro.create({
-    data: { turmaId, data: new Date(data), horario: horario || null },
+    data: { turmaId, data: dataEncontro, horario: horario || null },
   });
-  await registrarLog(session, "abriu encontro", new Date(data).toLocaleDateString("pt-BR"));
+  await registrarLog(session, "abriu encontro", dataEncontro.toLocaleDateString("pt-BR", { timeZone: "UTC" }));
   return NextResponse.json(encontro, { status: 201 });
 }

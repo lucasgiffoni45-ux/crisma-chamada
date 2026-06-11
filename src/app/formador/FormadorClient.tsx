@@ -24,7 +24,7 @@ export default function FormadorClient({ turmasIniciais, sabados, nome }: {
   if (!turma) {
     return (
       <div className="max-w-2xl mx-auto p-6 text-center">
-        <h1 className="text-2xl font-bold text-indigo-700 mb-2">Painel do Formador</h1>
+        <h1 className="text-2xl font-bold text-violet-700 mb-2">Painel do Formador</h1>
         <p className="text-gray-500">Você ainda não foi atribuído a nenhuma turma. Fale com a coordenadora.</p>
         <a href="/api/auth/signout" className="mt-4 inline-block text-sm text-gray-400 hover:text-gray-600">Sair</a>
       </div>
@@ -34,10 +34,13 @@ export default function FormadorClient({ turmasIniciais, sabados, nome }: {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-indigo-700">Painel do Formador</h1>
-        <a href="/api/auth/signout" className="text-sm text-gray-400 hover:text-gray-600">Sair</a>
+        <div className="flex items-center gap-2">
+          <span className="text-amber-600 text-xl">✝</span>
+          <h1 className="text-2xl font-bold text-violet-800">Painel do Formador</h1>
+        </div>
+        <a href="/api/auth/signout" className="text-sm text-stone-400 hover:text-stone-600">Sair</a>
       </div>
-      <p className="text-sm text-gray-400 mb-4">Olá, {nome}.</p>
+      <p className="text-sm text-stone-400 mb-4">Olá, {nome}.</p>
 
       {/* Seletor de turma (se houver mais de uma) */}
       {turmas.length > 1 && (
@@ -54,7 +57,7 @@ export default function FormadorClient({ turmasIniciais, sabados, nome }: {
       <div className="flex gap-1 mb-6 border-b">
         {(["chamada", "alunos", "calendario"] as const).map((a) => (
           <button key={a} onClick={() => setAba(a)}
-            className={`px-4 py-2 text-sm font-medium transition ${aba === a ? "border-b-2 border-indigo-600 text-indigo-600" : "text-gray-500 hover:text-gray-700"}`}>
+            className={`px-4 py-2 text-sm font-medium transition ${aba === a ? "border-b-2 border-violet-600 text-violet-600" : "text-gray-500 hover:text-gray-700"}`}>
             {a === "chamada" ? "Chamada" : a === "alunos" ? "Alunos" : "Calendário"}
           </button>
         ))}
@@ -145,7 +148,7 @@ function AbaChamada({ turma, onChange }: { turma: Turma; onChange: (p: Partial<T
           <label className="text-xs text-gray-500">Horário (opcional)</label>
           <input type="time" value={horario} onChange={(e) => setHorario(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
         </div>
-        <button onClick={abrir} className="rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700 transition">
+        <button onClick={abrir} className="rounded-lg bg-violet-600 px-6 py-3 font-semibold text-white hover:bg-violet-700 transition">
           Abrir encontro e gerar QR
         </button>
       </div>
@@ -157,14 +160,14 @@ function AbaChamada({ turma, onChange }: { turma: Turma; onChange: (p: Partial<T
   return (
     <div className="space-y-6">
       <div className="flex flex-col items-center gap-4 p-6 bg-white rounded-xl shadow">
-        <p className="text-green-600 font-semibold">✅ Encontro aberto — {new Date(encontro.data).toLocaleDateString("pt-BR")}</p>
+        <p className="text-green-600 font-semibold">✅ Encontro aberto — {new Date(encontro.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</p>
         <QRCodeSVG value={presencaUrl} size={220} />
         <p className="text-xs text-gray-400 break-all text-center">{presencaUrl}</p>
         <button onClick={fechar} className="rounded-lg bg-red-500 px-6 py-2 font-semibold text-white hover:bg-red-600 transition">
           Encerrar encontro
         </button>
         <p className="text-sm font-semibold text-gray-600">
-          Presentes: <span className="text-indigo-600">{presentes.length}</span>
+          Presentes: <span className="text-violet-600">{presentes.length}</span>
           <span className="text-gray-400"> / {turma.crismandos.length}</span>
         </p>
       </div>
@@ -176,7 +179,7 @@ function AbaChamada({ turma, onChange }: { turma: Turma; onChange: (p: Partial<T
           className="border rounded-lg px-3 py-2 text-sm w-full" />
         <input value={licao} onChange={(e) => setLicao(e.target.value)} placeholder="Lição de casa"
           className="border rounded-lg px-3 py-2 text-sm w-full" />
-        <button onClick={salvarNotas} className="text-sm rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700">
+        <button onClick={salvarNotas} className="text-sm rounded-lg bg-violet-600 px-4 py-2 font-semibold text-white hover:bg-violet-700">
           Salvar
         </button>
       </div>
@@ -203,7 +206,7 @@ function AbaChamada({ turma, onChange }: { turma: Turma; onChange: (p: Partial<T
       </div>
 
       <div className="text-center">
-        <a href={`/api/relatorio?turmaId=${turma.id}`} download className="text-sm text-indigo-500 hover:underline">
+        <a href={`/api/relatorio?turmaId=${turma.id}`} download className="text-sm text-violet-500 hover:underline">
           ⬇ Exportar presenças da turma (CSV)
         </a>
       </div>
@@ -263,7 +266,7 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
           <input type="number" placeholder="Idade" value={idade} onChange={(e) => setIdade(e.target.value)} className="border rounded-lg px-3 py-2 text-sm w-24" />
         </div>
         {erro && <p className="text-red-500 text-sm">{erro}</p>}
-        <button type="submit" className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700 transition">Cadastrar</button>
+        <button type="submit" className="rounded-lg bg-violet-600 px-4 py-2 font-semibold text-white hover:bg-violet-700 transition">Cadastrar</button>
       </form>
 
       <div className="bg-white rounded-xl shadow divide-y">
@@ -290,7 +293,7 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
                   <p className="text-xs text-gray-400">{a.email}{a.contato ? ` · ${a.contato}` : ""}</p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setEditando(a.id)} className="text-xs text-indigo-400 hover:text-indigo-600">Editar</button>
+                  <button onClick={() => setEditando(a.id)} className="text-xs text-violet-400 hover:text-violet-600">Editar</button>
                   <button onClick={() => remover(a.id)} className="text-xs text-red-400 hover:text-red-600">Remover</button>
                 </div>
               </div>
@@ -313,8 +316,8 @@ function AbaCalendario({ sabados }: { sabados: Sabado[] }) {
       {sabados.map((s) => (
         <div key={s.id} className="px-4 py-2 flex items-center justify-between text-sm">
           <div>
-            <span className="font-medium">{new Date(s.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}</span>
-            {s.mensagem && <span className="ml-2 text-indigo-500">“{s.mensagem}”</span>}
+            <span className="font-medium">{new Date(s.data).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short", timeZone: "UTC" })}</span>
+            {s.mensagem && <span className="ml-2 text-violet-500">“{s.mensagem}”</span>}
           </div>
           <span className={s.recesso || !s.temEncontro ? "text-gray-400" : "text-green-600"}>
             {s.recesso ? "Recesso" : s.temEncontro ? `Encontro${s.horario ? " " + s.horario : ""}` : "Sem encontro"}
