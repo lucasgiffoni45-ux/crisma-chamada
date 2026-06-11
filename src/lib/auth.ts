@@ -5,7 +5,14 @@ import { prisma } from "./prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  providers: [Google],
+  providers: [
+    Google({
+      // Vincula o login Google a um usuário já cadastrado com o mesmo e-mail
+      // (coordenadoras/formadores são pré-cadastrados pelo papel acima deles).
+      // Seguro aqui: o e-mail é verificado pelo Google e os e-mails são de confiança.
+      allowDangerousEmailAccountLinking: true,
+    }),
+  ],
   callbacks: {
     async session({ session, user }) {
       session.user.id = user.id;
