@@ -8,6 +8,7 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ---------- NextAuth ----------
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -40,9 +41,11 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  // Papel: "dono" | "coordenadora" | "formador" | "student"
   role          String    @default("student")
   accounts      Account[]
   sessions      Session[]
+  turmas        FormadorTurma[]
   attendances   Attendance[]
 }
 
@@ -54,32 +57,95 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Crismando {
-  id          String       @id @default(cuid())
-  nome        String
-  email       String       @unique
-  createdAt   DateTime     @default(now())
-  attendances Attendance[]
+// ---------- Domínio da Crisma ----------
+model Turma {
+  id        String          @id @default(cuid())
+  nome      String
+  createdAt DateTime        @default(now())
+  formadores FormadorTurma[]
+  crismandos Crismando[]
+  encontros  Encontro[]
 }
 
-model ChamadaSessao {
-  id         String       @id @default(cuid())
-  token      String       @unique @default(cuid())
-  abertaEm   DateTime     @default(now())
-  fechadaEm  DateTime?
-  ativa      Boolean      @default(true)
+model FormadorTurma {
+  id        String   @id @default(cuid())
+  userId    String
+  turmaId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  turma     Turma    @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, turmaId])
+}
+
+model Crismando {
+  id          String         @id @default(cuid())
+  nome        String
+  email       String         @unique
+  contato     String?
+  idade       Int?
+  turmaId     String
+  createdAt   DateTime       @default(now())
+  turma       Turma          @relation(fields: [turmaId], references: [id], onDelete: Cascade)
   attendances Attendance[]
+  anotacoes   AnotacaoAluno[]
+}
+
+model Encontro {
+  id          String          @id @default(cuid())
+  token       String          @unique @default(cuid())
+  turmaId     String
+  data        DateTime        // o sábado do encontro
+  horario     String?
+  tema        String?
+  licaoDeCasa String?
+  abertoEm    DateTime        @default(now())
+  fechadoEm   DateTime?
+  ativa       Boolean         @default(true)
+  turma       Turma           @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
+  anotacoes   AnotacaoAluno[]
 }
 
 model Attendance {
-  id          String        @id @default(cuid())
+  id          String     @id @default(cuid())
   crismandoId String
-  sessaoId    String
-  marcadaEm  DateTime      @default(now())
-  crismando   Crismando     @relation(fields: [crismandoId], references: [id])
-  sessao      ChamadaSessao @relation(fields: [sessaoId], references: [id])
+  encontroId  String
+  marcadaEm   DateTime   @default(now())
   userId      String?
-  user        User?         @relation(fields: [userId], references: [id])
+  crismando   Crismando  @relation(fields: [crismandoId], references: [id], onDelete: Cascade)
+  encontro    Encontro   @relation(fields: [encontroId], references: [id], onDelete: Cascade)
+  user        User?      @relation(fields: [userId], references: [id])
 
-  @@unique([crismandoId, sessaoId])
+  @@unique([crismandoId, encontroId])
+}
+
+model AnotacaoAluno {
+  id          String    @id @default(cuid())
+  encontroId  String
+  crismandoId String
+  texto       String    // limitado a 50 caracteres na aplicação
+  createdAt   DateTime  @default(now())
+  encontro    Encontro  @relation(fields: [encontroId], references: [id], onDelete: Cascade)
+  crismando   Crismando @relation(fields: [crismandoId], references: [id], onDelete: Cascade)
+
+  @@unique([encontroId, crismandoId])
+}
+
+model CalendarioSabado {
+  id         String   @id @default(cuid())
+  data       DateTime @unique // um sábado
+  temEncontro Boolean @default(true)
+  recesso    Boolean  @default(false)
+  horario    String?
+  mensagem   String?  // recado da coordenadora, máx 50 caracteres na aplicação
+}
+
+model LogAtividade {
+  id        String   @id @default(cuid())
+  userId    String?
+  papel     String?
+  acao      String
+  alvo      String?
+  createdAt DateTime @default(now())
 }
