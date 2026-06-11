@@ -28,7 +28,9 @@ export default function DonoClient({
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
-          <span className="text-amber-600 text-xl">✝</span>
+          <svg viewBox="0 0 24 24" className="w-6 h-6 text-amber-600" fill="currentColor" aria-hidden="true">
+            <path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z" />
+          </svg>
           <h1 className="text-2xl font-bold text-violet-800">Painel do Dono</h1>
         </div>
         <a href="/api/auth/signout" className="text-sm text-stone-400 hover:text-stone-600">Sair</a>

@@ -15,7 +15,9 @@ export default async function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="text-center">
-        <p className="text-2xl text-amber-600 mb-1">✝</p>
+        <svg viewBox="0 0 24 24" className="w-8 h-8 mx-auto mb-1 text-amber-600" fill="currentColor" aria-hidden="true">
+          <path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z" />
+        </svg>
         <h1 className="text-3xl font-bold text-violet-800">Crisma — Chamada</h1>
         <p className="mt-2 text-stone-500">Sistema de presença para a catequese</p>
       </div>
