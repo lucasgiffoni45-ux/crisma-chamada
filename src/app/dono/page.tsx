@@ -24,17 +24,32 @@ export default async function DonoPage() {
         include: {
           _count: { select: { crismandos: true, encontros: true } },
           formadores: { include: { user: { select: { name: true, email: true } } } },
+          encontros: { select: { _count: { select: { attendances: true } } } },
         },
       }),
     ]);
 
   const stats = { totalTurmas, totalFormadores, totalAlunos, totalEncontros, totalPresencas };
 
+  // Estatísticas por turma para os gráficos.
+  const estatisticas = turmas.map((t) => {
+    const alunos = t._count.crismandos;
+    const nEncontros = t.encontros.length;
+    const presencas = t.encontros.reduce((s, e) => s + e._count.attendances, 0);
+    const esperado = alunos * nEncontros;
+    const faltas = Math.max(0, esperado - presencas);
+    const frequencia = esperado > 0 ? (presencas / esperado) * 100 : 0;
+    return { id: t.id, nome: t.nome, alunos, encontros: nEncontros, presencas, faltas, frequencia };
+  });
+
+  const turmasLeves = turmas.map((t) => ({ id: t.id, nome: t.nome, _count: t._count, formadores: t.formadores }));
+
   return (
     <DonoClient
       coordenadorasIniciais={coordenadoras}
       stats={stats}
-      turmas={JSON.parse(JSON.stringify(turmas))}
+      turmas={JSON.parse(JSON.stringify(turmasLeves))}
+      estatisticas={estatisticas}
       nome={session!.user?.name ?? ""}
     />
   );

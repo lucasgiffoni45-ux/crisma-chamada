@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BarChart } from "@/components/Charts";
 
 type Coord = { id: string; name: string | null; email: string | null };
 type Turma = {
@@ -9,17 +10,20 @@ type Turma = {
   _count: { crismandos: number; encontros: number };
   formadores: { user: { name: string | null; email: string | null } }[];
 };
+type Estat = { id: string; nome: string; alunos: number; encontros: number; presencas: number; faltas: number; frequencia: number };
 type Stats = { totalTurmas: number; totalFormadores: number; totalAlunos: number; totalEncontros: number; totalPresencas: number };
 
 export default function DonoClient({
   coordenadorasIniciais,
   stats,
   turmas,
+  estatisticas,
   nome,
 }: {
   coordenadorasIniciais: Coord[];
   stats: Stats;
   turmas: Turma[];
+  estatisticas: Estat[];
   nome: string;
 }) {
   const [aba, setAba] = useState<"visao" | "coordenadoras" | "registro">("visao");
@@ -46,14 +50,14 @@ export default function DonoClient({
         ))}
       </div>
 
-      {aba === "visao" && <AbaVisao stats={stats} turmas={turmas} />}
+      {aba === "visao" && <AbaVisao stats={stats} turmas={turmas} estatisticas={estatisticas} />}
       {aba === "coordenadoras" && <AbaCoordenadoras inicial={coordenadorasIniciais} />}
       {aba === "registro" && <AbaRegistro />}
     </div>
   );
 }
 
-function AbaVisao({ stats, turmas }: { stats: Stats; turmas: Turma[] }) {
+function AbaVisao({ stats, turmas, estatisticas }: { stats: Stats; turmas: Turma[]; estatisticas: Estat[] }) {
   const cards = [
     { rotulo: "Turmas", valor: stats.totalTurmas },
     { rotulo: "Formadores", valor: stats.totalFormadores },
@@ -71,6 +75,14 @@ function AbaVisao({ stats, turmas }: { stats: Stats; turmas: Turma[] }) {
           </div>
         ))}
       </div>
+
+      {estatisticas.length > 0 && (
+        <div className="space-y-4">
+          <BarChart titulo="Alunos por turma" dados={estatisticas.map((e) => ({ label: e.nome, valor: e.alunos }))} />
+          <BarChart titulo="Faltas por turma" dados={estatisticas.map((e) => ({ label: e.nome, valor: e.faltas }))} cor="bg-red-400" />
+          <BarChart titulo="Frequência por turma (%)" dados={estatisticas.map((e) => ({ label: e.nome, valor: e.frequencia }))} sufixo="%" maxFixo={100} cor="bg-green-500" />
+        </div>
+      )}
 
       <div>
         <h2 className="text-sm font-semibold text-stone-600 mb-2">Turmas</h2>

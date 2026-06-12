@@ -15,6 +15,7 @@ export default async function CoordenadoraPage() {
       include: {
         formadores: { include: { user: { select: { id: true, name: true, email: true } } } },
         _count: { select: { crismandos: true } },
+        encontros: { select: { _count: { select: { attendances: true } } } },
       },
     }),
     prisma.user.findMany({
@@ -36,12 +37,29 @@ export default async function CoordenadoraPage() {
     }),
   ]);
 
+  // Estatísticas por turma (alunos, encontros, presenças, faltas estimadas, frequência %).
+  const estatisticas = turmas.map((t) => {
+    const alunos = t._count.crismandos;
+    const nEncontros = t.encontros.length;
+    const presencas = t.encontros.reduce((s, e) => s + e._count.attendances, 0);
+    const esperado = alunos * nEncontros;
+    const faltas = Math.max(0, esperado - presencas);
+    const frequencia = esperado > 0 ? (presencas / esperado) * 100 : 0;
+    return { id: t.id, nome: t.nome, alunos, encontros: nEncontros, presencas, faltas, frequencia };
+  });
+
+  // Remove o campo encontros (já agregado) antes de enviar ao client.
+  const turmasLeves = turmas.map((t) => ({
+    id: t.id, nome: t.nome, formadores: t.formadores, _count: t._count,
+  }));
+
   return (
     <CoordenadoraClient
-      turmasIniciais={JSON.parse(JSON.stringify(turmas))}
+      turmasIniciais={JSON.parse(JSON.stringify(turmasLeves))}
       formadoresIniciais={JSON.parse(JSON.stringify(formadores))}
       sabadosIniciais={JSON.parse(JSON.stringify(sabados))}
       encontros={JSON.parse(JSON.stringify(encontros))}
+      estatisticas={estatisticas}
       ano={ano}
     />
   );

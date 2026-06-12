@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { BarChart } from "@/components/Charts";
 
 type Aluno = { id: string; nome: string; email: string; contato: string | null; idade: number | null };
 type Encontro = { id: string; token: string; data: string | Date; horario: string | null; tema: string | null; licaoDeCasa: string | null };
-type Turma = { id: string; nome: string; crismandos: Aluno[]; encontroAtivo: Encontro | null };
+type Ponto = { label: string; valor: number };
+type Turma = { id: string; nome: string; crismandos: Aluno[]; encontroAtivo: Encontro | null; totalEncontros: number; graficos: { porEncontro: Ponto[]; porAluno: Ponto[] } };
 type Sabado = { id: string; data: string; temEncontro: boolean; recesso: boolean; horario: string | null; mensagem: string | null };
 
 export default function FormadorClient({ turmasIniciais, sabados, nome }: {
@@ -13,7 +15,7 @@ export default function FormadorClient({ turmasIniciais, sabados, nome }: {
 }) {
   const [turmas, setTurmas] = useState(turmasIniciais);
   const [turmaSelId, setTurmaSelId] = useState(turmasIniciais[0]?.id ?? "");
-  const [aba, setAba] = useState<"chamada" | "alunos" | "calendario">("chamada");
+  const [aba, setAba] = useState<"chamada" | "alunos" | "calendario" | "graficos">("chamada");
 
   const turma = turmas.find((t) => t.id === turmaSelId);
 
@@ -24,9 +26,9 @@ export default function FormadorClient({ turmasIniciais, sabados, nome }: {
   if (!turma) {
     return (
       <div className="max-w-2xl mx-auto p-6 text-center">
-        <h1 className="text-2xl font-bold text-violet-700 mb-2">Painel do Formador</h1>
-        <p className="text-gray-500">Você ainda não foi atribuído a nenhuma turma. Fale com a coordenadora.</p>
-        <a href="/api/auth/signout" className="mt-4 inline-block text-sm text-gray-400 hover:text-gray-600">Sair</a>
+        <h1 className="text-2xl font-bold text-violet-800 mb-2">Painel do Formador</h1>
+        <p className="text-stone-500">Você ainda não foi atribuído a nenhuma turma. Fale com a coordenadora.</p>
+        <a href="/api/auth/signout" className="mt-4 inline-block text-sm text-stone-400 hover:text-stone-600">Sair</a>
       </div>
     );
   }
@@ -54,19 +56,20 @@ export default function FormadorClient({ turmasIniciais, sabados, nome }: {
           {turmas.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
         </select>
       )}
-      {turmas.length === 1 && <p className="mb-4 font-semibold text-gray-700">{turma.nome}</p>}
+      {turmas.length === 1 && <p className="mb-4 font-semibold text-stone-700">{turma.nome}</p>}
 
       <div className="flex gap-1 mb-6 border-b">
-        {(["chamada", "alunos", "calendario"] as const).map((a) => (
+        {(["chamada", "alunos", "graficos", "calendario"] as const).map((a) => (
           <button key={a} onClick={() => setAba(a)}
-            className={`px-4 py-2 text-sm font-medium transition ${aba === a ? "border-b-2 border-violet-600 text-violet-600" : "text-gray-500 hover:text-gray-700"}`}>
-            {a === "chamada" ? "Chamada" : a === "alunos" ? "Alunos" : "Calendário"}
+            className={`px-4 py-2 text-sm font-medium transition ${aba === a ? "border-b-2 border-violet-700 text-violet-800" : "text-stone-500 hover:text-stone-700"}`}>
+            {a === "chamada" ? "Chamada" : a === "alunos" ? "Alunos" : a === "graficos" ? "Gráficos" : "Calendário"}
           </button>
         ))}
       </div>
 
       {aba === "chamada" && <AbaChamada turma={turma} onChange={(p) => atualizarTurma(turma.id, p)} />}
       {aba === "alunos" && <AbaAlunos turma={turma} onChange={(p) => atualizarTurma(turma.id, p)} />}
+      {aba === "graficos" && <AbaGraficos turma={turma} />}
       {aba === "calendario" && <AbaCalendario sabados={sabados} />}
     </div>
   );
@@ -303,7 +306,43 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
           </div>
         ))}
       </div>
-      <p className="text-xs text-gray-400 text-center">{turma.crismandos.length} aluno(s)</p>
+      <p className="text-xs text-stone-400 text-center">{turma.crismandos.length} aluno(s)</p>
+    </div>
+  );
+}
+
+// ---------- Aba Gráficos ----------
+function AbaGraficos({ turma }: { turma: Turma }) {
+  const { porEncontro, porAluno } = turma.graficos;
+  const totalPresencas = porEncontro.reduce((s, p) => s + p.valor, 0);
+  const esperado = turma.crismandos.length * turma.totalEncontros;
+  const freq = esperado > 0 ? (totalPresencas / esperado) * 100 : 0;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <CartaoNum valor={String(turma.crismandos.length)} rotulo="Alunos" />
+        <CartaoNum valor={String(turma.totalEncontros)} rotulo="Encontros" />
+        <CartaoNum valor={`${freq.toFixed(0)}%`} rotulo="Frequência" />
+      </div>
+      <BarChart titulo="Presentes por encontro" dados={porEncontro} cor="bg-violet-600" vazio="Nenhum encontro realizado ainda." />
+      <BarChart
+        titulo="Presenças por aluno"
+        dados={[...porAluno].sort((a, b) => b.valor - a.valor)}
+        maxFixo={turma.totalEncontros || 1}
+        cor="bg-green-500"
+        vazio="Nenhum aluno cadastrado ainda."
+      />
+      <p className="text-xs text-stone-400 text-center">Alunos com poucas presenças podem precisar de atenção.</p>
+    </div>
+  );
+}
+
+function CartaoNum({ valor, rotulo }: { valor: string; rotulo: string }) {
+  return (
+    <div className="bg-white rounded-xl shadow p-3 text-center">
+      <p className="text-2xl font-bold text-violet-800">{valor}</p>
+      <p className="text-xs text-stone-500 mt-0.5">{rotulo}</p>
     </div>
   );
 }
