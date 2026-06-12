@@ -13,11 +13,17 @@ type Turma = {
 type Sabado = { id: string; data: string; temEncontro: boolean; recesso: boolean; horario: string | null; mensagem: string | null };
 type Encontro = { id: string; data: string; turma: { nome: string }; tema: string | null; attendances: { crismando: { nome: string } }[] };
 type Estat = { id: string; nome: string; alunos: number; encontros: number; presencas: number; faltas: number; frequencia: number };
+type AlunoDetalhe = {
+  id: string; nome: string; email: string | null; contato: string | null; idade: number | null;
+  dataNascimento: string | null; sacramentos: string | null; alergias: string | null; necessidades: string | null;
+  nomePai: string | null; nomeMae: string | null; endereco: string | null; estadoCivil: string | null; serieEscolar: string | null; telefone: string | null;
+  turma: { nome: string };
+};
 
-export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais, sabadosIniciais, encontros, estatisticas, ano }: {
-  turmasIniciais: Turma[]; formadoresIniciais: Formador[]; sabadosIniciais: Sabado[]; encontros: Encontro[]; estatisticas: Estat[]; ano: number;
+export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais, sabadosIniciais, encontros, estatisticas, alunos, ano }: {
+  turmasIniciais: Turma[]; formadoresIniciais: Formador[]; sabadosIniciais: Sabado[]; encontros: Encontro[]; estatisticas: Estat[]; alunos: AlunoDetalhe[]; ano: number;
 }) {
-  const [aba, setAba] = useState<"geral" | "turmas" | "formadores" | "calendario" | "historico" | "log">("geral");
+  const [aba, setAba] = useState<"geral" | "turmas" | "formadores" | "alunos" | "calendario" | "historico" | "log">("geral");
   const [turmas, setTurmas] = useState(turmasIniciais);
   const [formadores, setFormadores] = useState(formadoresIniciais);
   const [sabados, setSabados] = useState(sabadosIniciais);
@@ -54,10 +60,10 @@ export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais,
       </div>
 
       <div className="flex gap-1 mb-6 border-b overflow-x-auto">
-        {(["geral", "turmas", "formadores", "calendario", "historico", "log"] as const).map((a) => (
+        {(["geral", "turmas", "formadores", "alunos", "calendario", "historico", "log"] as const).map((a) => (
           <button key={a} onClick={() => setAba(a)}
             className={`px-3 py-2 text-sm font-medium whitespace-nowrap transition ${aba === a ? "border-b-2 border-violet-700 text-violet-800" : "text-stone-500 hover:text-stone-700"}`}>
-            {a === "geral" ? "Visão geral" : a === "turmas" ? "Turmas" : a === "formadores" ? "Formadores" : a === "calendario" ? "Calendário" : a === "historico" ? "Histórico" : "Registro"}
+            {a === "geral" ? "Visão geral" : a === "turmas" ? "Turmas" : a === "formadores" ? "Formadores" : a === "alunos" ? "Alunos" : a === "calendario" ? "Calendário" : a === "historico" ? "Histórico" : "Registro"}
           </button>
         ))}
       </div>
@@ -65,6 +71,7 @@ export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais,
       {aba === "geral" && <AbaGeral estatisticas={estatisticas} />}
       {aba === "turmas" && <AbaTurmas turmas={turmas} setTurmas={setTurmas} formadores={formadores} atribuir={atribuir} />}
       {aba === "formadores" && <AbaFormadores formadores={formadores} setFormadores={setFormadores} turmas={turmas} />}
+      {aba === "alunos" && <AbaAlunos alunos={alunos} />}
       {aba === "calendario" && <AbaCalendario sabados={sabados} setSabados={setSabados} ano={ano} />}
       {aba === "historico" && <AbaHistorico encontros={encontros} />}
       {aba === "log" && <AbaLog />}
@@ -222,6 +229,62 @@ function AbaFormadores({ formadores, setFormadores, turmas }: { formadores: Form
       </div>
     </div>
   );
+}
+
+function AbaAlunos({ alunos }: { alunos: AlunoDetalhe[] }) {
+  const [aberto, setAberto] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
+
+  const filtrados = alunos.filter((a) => a.nome.toLowerCase().includes(busca.toLowerCase()));
+  // Agrupa por turma.
+  const porTurma = filtrados.reduce<Record<string, AlunoDetalhe[]>>((acc, a) => {
+    (acc[a.turma.nome] ??= []).push(a);
+    return acc;
+  }, {});
+
+  return (
+    <div className="space-y-4">
+      <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar aluno pelo nome…" className="border rounded-lg px-3 py-2 text-sm w-full" />
+      <p className="text-xs text-stone-400">{filtrados.length} aluno(s). Toque num nome para ver todos os dados.</p>
+      {Object.keys(porTurma).length === 0 && <p className="text-sm text-stone-400 text-center">Nenhum aluno cadastrado.</p>}
+      {Object.entries(porTurma).map(([turma, lista]) => (
+        <div key={turma}>
+          <h3 className="text-sm font-semibold text-violet-800 mb-1">{turma} <span className="text-stone-400 font-normal">({lista.length})</span></h3>
+          <div className="bg-white rounded-xl shadow divide-y">
+            {lista.map((a) => (
+              <div key={a.id} className="px-4 py-2">
+                <button onClick={() => setAberto(aberto === a.id ? null : a.id)} className="w-full flex items-center justify-between text-left">
+                  <span className="text-sm font-medium">{a.nome}{a.idade ? `, ${a.idade}` : ""}</span>
+                  <span className="text-xs text-stone-400">{aberto === a.id ? "▲" : "▼"}</span>
+                </button>
+                {aberto === a.id && (
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-stone-600">
+                    <Campo r="E-mail" v={a.email} />
+                    <Campo r="WhatsApp" v={a.contato} />
+                    <Campo r="Telefone" v={a.telefone} />
+                    <Campo r="Nascimento" v={a.dataNascimento} />
+                    <Campo r="Sacramentos" v={a.sacramentos} />
+                    <Campo r="Alergias" v={a.alergias} />
+                    <Campo r="Necessidades" v={a.necessidades} />
+                    <Campo r="Estado civil" v={a.estadoCivil} />
+                    <Campo r="Série escolar" v={a.serieEscolar} />
+                    <Campo r="Nome do pai" v={a.nomePai} />
+                    <Campo r="Nome da mãe" v={a.nomeMae} />
+                    <Campo r="Endereço" v={a.endereco} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Campo({ r, v }: { r: string; v: string | null }) {
+  if (!v) return null;
+  return <p><span className="text-stone-400">{r}:</span> {v}</p>;
 }
 
 function AbaCalendario({ sabados, setSabados, ano }: { sabados: Sabado[]; setSabados: (s: Sabado[]) => void; ano: number }) {

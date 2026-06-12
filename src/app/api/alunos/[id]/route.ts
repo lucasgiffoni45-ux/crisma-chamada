@@ -15,12 +15,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Você não gerencia esta turma" }, { status: 403 });
   }
 
-  const { nome, email, contato, idade } = await req.json();
+  const b = await req.json();
+  const { nome, email, contato, idade } = b;
   const data: any = {};
   if (nome !== undefined) data.nome = nome;
-  if (email !== undefined) data.email = String(email).toLowerCase();
+  if (email !== undefined) data.email = email ? String(email).toLowerCase() : null;
   if (contato !== undefined) data.contato = contato || null;
   if (idade !== undefined) data.idade = idade ? Number(idade) : null;
+  for (const campo of ["dataNascimento", "sacramentos", "alergias", "necessidades", "nomePai", "nomeMae", "endereco", "estadoCivil", "serieEscolar", "telefone"]) {
+    if (b[campo] !== undefined) data[campo] = b[campo] || null;
+  }
 
   try {
     const atualizado = await prisma.crismando.update({ where: { id }, data });

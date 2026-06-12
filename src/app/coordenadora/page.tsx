@@ -37,6 +37,12 @@ export default async function CoordenadoraPage() {
     }),
   ]);
 
+  // Todos os alunos (coordenadora vê tudo), com a turma, para a aba de detalhes.
+  const alunos = await prisma.crismando.findMany({
+    orderBy: [{ turma: { nome: "asc" } }, { nome: "asc" }],
+    include: { turma: { select: { nome: true } } },
+  });
+
   // Estatísticas por turma (alunos, encontros, presenças, faltas estimadas, frequência %).
   const estatisticas = turmas.map((t) => {
     const alunos = t._count.crismandos;
@@ -60,6 +66,7 @@ export default async function CoordenadoraPage() {
       sabadosIniciais={JSON.parse(JSON.stringify(sabados))}
       encontros={JSON.parse(JSON.stringify(encontros))}
       estatisticas={estatisticas}
+      alunos={JSON.parse(JSON.stringify(alunos))}
       ano={ano}
     />
   );

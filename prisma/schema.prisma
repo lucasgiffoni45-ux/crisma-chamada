@@ -81,9 +81,20 @@ model FormadorTurma {
 model Crismando {
   id          String         @id @default(cuid())
   nome        String
-  email       String         @unique
-  contato     String?
+  email       String?        @unique // opcional: coletado depois (login Google)
+  contato     String?        // WhatsApp — visível ao formador
   idade       Int?
+  dataNascimento String?     // texto livre (formatos variados) — formador
+  sacramentos String?        // formador
+  alergias    String?        // formador
+  necessidades String?       // necessidades especiais — formador
+  // Campos visíveis apenas para a coordenadora:
+  nomePai     String?
+  nomeMae     String?
+  endereco    String?
+  estadoCivil String?
+  serieEscolar String?
+  telefone    String?
   turmaId     String
   createdAt   DateTime       @default(now())
   turma       Turma          @relation(fields: [turmaId], references: [id], onDelete: Cascade)

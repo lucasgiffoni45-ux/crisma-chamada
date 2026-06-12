@@ -37,9 +37,10 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
-  const { nome, email, contato, idade, turmaId } = await req.json();
-  if (!nome || !email || !turmaId) {
-    return NextResponse.json({ error: "Nome, e-mail e turma são obrigatórios" }, { status: 400 });
+  const b = await req.json();
+  const { nome, email, contato, idade, turmaId } = b;
+  if (!nome || !turmaId) {
+    return NextResponse.json({ error: "Nome e turma são obrigatórios" }, { status: 400 });
   }
   if (!(await podeGerenciarTurma(session, turmaId))) {
     return NextResponse.json({ error: "Você não gerencia esta turma" }, { status: 403 });
@@ -48,15 +49,25 @@ export async function POST(req: NextRequest) {
     const aluno = await prisma.crismando.create({
       data: {
         nome,
-        email: email.toLowerCase(),
+        email: email ? String(email).toLowerCase() : null,
         contato: contato || null,
         idade: idade ? Number(idade) : null,
+        dataNascimento: b.dataNascimento || null,
+        sacramentos: b.sacramentos || null,
+        alergias: b.alergias || null,
+        necessidades: b.necessidades || null,
+        nomePai: b.nomePai || null,
+        nomeMae: b.nomeMae || null,
+        endereco: b.endereco || null,
+        estadoCivil: b.estadoCivil || null,
+        serieEscolar: b.serieEscolar || null,
+        telefone: b.telefone || null,
         turmaId,
       },
     });
     await registrarLog(session, "cadastrou aluno", nome);
     return NextResponse.json(aluno, { status: 201 });
   } catch {
-    return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
+    return NextResponse.json({ error: "E-mail já cadastrado em outro aluno" }, { status: 409 });
   }
 }

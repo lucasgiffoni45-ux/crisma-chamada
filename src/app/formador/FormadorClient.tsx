@@ -4,7 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { BarChart } from "@/components/Charts";
 
-type Aluno = { id: string; nome: string; email: string; contato: string | null; idade: number | null };
+type Aluno = {
+  id: string; nome: string; email: string | null; contato: string | null; idade: number | null;
+  dataNascimento: string | null; sacramentos: string | null; alergias: string | null; necessidades: string | null;
+};
 type Encontro = { id: string; token: string; data: string | Date; horario: string | null; tema: string | null; licaoDeCasa: string | null };
 type Ponto = { label: string; valor: number };
 type Turma = { id: string; nome: string; crismandos: Aluno[]; encontroAtivo: Encontro | null; totalEncontros: number; graficos: { porEncontro: Ponto[]; porAluno: Ponto[] } };
@@ -225,6 +228,10 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
   const [email, setEmail] = useState("");
   const [contato, setContato] = useState("");
   const [idade, setIdade] = useState("");
+  const [dataNascimento, setNascimento] = useState("");
+  const [sacramentos, setSacramentos] = useState("");
+  const [alergias, setAlergias] = useState("");
+  const [necessidades, setNecessidades] = useState("");
   const [erro, setErro] = useState("");
   const [editando, setEditando] = useState<string | null>(null);
 
@@ -233,12 +240,12 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
     setErro("");
     const res = await fetch("/api/alunos", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, email, contato, idade, turmaId: turma.id }),
+      body: JSON.stringify({ nome, email, contato, idade, dataNascimento, sacramentos, alergias, necessidades, turmaId: turma.id }),
     });
     const data = await res.json();
     if (res.ok) {
       onChange({ crismandos: [...turma.crismandos, data].sort((a, b) => a.nome.localeCompare(b.nome)) });
-      setNome(""); setEmail(""); setContato(""); setIdade("");
+      setNome(""); setEmail(""); setContato(""); setIdade(""); setNascimento(""); setSacramentos(""); setAlergias(""); setNecessidades("");
     } else setErro(data.error ?? "Erro ao cadastrar");
   }
 
@@ -251,7 +258,10 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
   async function salvarEdicao(a: Aluno) {
     await fetch(`/api/alunos/${a.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome: a.nome, email: a.email, contato: a.contato, idade: a.idade }),
+      body: JSON.stringify({
+        nome: a.nome, email: a.email, contato: a.contato, idade: a.idade,
+        dataNascimento: a.dataNascimento, sacramentos: a.sacramentos, alergias: a.alergias, necessidades: a.necessidades,
+      }),
     });
     setEditando(null);
   }
@@ -263,15 +273,21 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
   return (
     <div className="space-y-4">
       <form onSubmit={adicionar} className="flex flex-col gap-3 bg-white p-4 rounded-xl shadow">
-        <h2 className="font-semibold text-gray-700">Novo aluno</h2>
+        <h2 className="font-semibold text-stone-700">Novo aluno</h2>
         <input type="text" placeholder="Nome completo" value={nome} required onChange={(e) => setNome(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
-        <input type="email" placeholder="E-mail (conta Google)" value={email} required onChange={(e) => setEmail(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
+        <input type="email" placeholder="E-mail (conta Google) — opcional, pode adicionar depois" value={email} onChange={(e) => setEmail(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
         <div className="flex gap-2">
-          <input type="text" placeholder="Contato (opcional)" value={contato} onChange={(e) => setContato(e.target.value)} className="border rounded-lg px-3 py-2 text-sm flex-1" />
+          <input type="text" placeholder="WhatsApp / contato" value={contato} onChange={(e) => setContato(e.target.value)} className="border rounded-lg px-3 py-2 text-sm flex-1" />
           <input type="number" placeholder="Idade" value={idade} onChange={(e) => setIdade(e.target.value)} className="border rounded-lg px-3 py-2 text-sm w-24" />
         </div>
+        <input type="text" placeholder="Data de nascimento (opcional)" value={dataNascimento} onChange={(e) => setNascimento(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
+        <input type="text" placeholder="Sacramentos recebidos (ex: Batismo)" value={sacramentos} onChange={(e) => setSacramentos(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
+        <div className="flex gap-2">
+          <input type="text" placeholder="Alergias" value={alergias} onChange={(e) => setAlergias(e.target.value)} className="border rounded-lg px-3 py-2 text-sm flex-1" />
+          <input type="text" placeholder="Necessidades especiais" value={necessidades} onChange={(e) => setNecessidades(e.target.value)} className="border rounded-lg px-3 py-2 text-sm flex-1" />
+        </div>
         {erro && <p className="text-red-500 text-sm">{erro}</p>}
-        <button type="submit" className="rounded-lg bg-violet-600 px-4 py-2 font-semibold text-white hover:bg-violet-700 transition">Cadastrar</button>
+        <button type="submit" className="rounded-lg bg-violet-700 px-4 py-2 font-semibold text-white hover:bg-violet-800 transition">Cadastrar</button>
       </form>
 
       <div className="bg-white rounded-xl shadow divide-y">
@@ -280,25 +296,39 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
           <div key={a.id} className="px-4 py-3">
             {editando === a.id ? (
               <div className="flex flex-col gap-2">
-                <input value={a.nome} onChange={(e) => editarCampo(a.id, "nome", e.target.value)} className="border rounded px-2 py-1 text-sm" />
-                <input value={a.email} onChange={(e) => editarCampo(a.id, "email", e.target.value)} className="border rounded px-2 py-1 text-sm" />
+                <input value={a.nome} onChange={(e) => editarCampo(a.id, "nome", e.target.value)} placeholder="Nome" className="border rounded px-2 py-1 text-sm" />
+                <input value={a.email ?? ""} onChange={(e) => editarCampo(a.id, "email", e.target.value)} placeholder="E-mail (adicionar depois)" className="border rounded px-2 py-1 text-sm" />
                 <div className="flex gap-2">
-                  <input value={a.contato ?? ""} placeholder="Contato" onChange={(e) => editarCampo(a.id, "contato", e.target.value)} className="border rounded px-2 py-1 text-sm flex-1" />
+                  <input value={a.contato ?? ""} placeholder="WhatsApp" onChange={(e) => editarCampo(a.id, "contato", e.target.value)} className="border rounded px-2 py-1 text-sm flex-1" />
                   <input value={a.idade ?? ""} type="number" placeholder="Idade" onChange={(e) => editarCampo(a.id, "idade", e.target.value)} className="border rounded px-2 py-1 text-sm w-20" />
+                </div>
+                <input value={a.dataNascimento ?? ""} placeholder="Data de nascimento" onChange={(e) => editarCampo(a.id, "dataNascimento", e.target.value)} className="border rounded px-2 py-1 text-sm" />
+                <input value={a.sacramentos ?? ""} placeholder="Sacramentos" onChange={(e) => editarCampo(a.id, "sacramentos", e.target.value)} className="border rounded px-2 py-1 text-sm" />
+                <div className="flex gap-2">
+                  <input value={a.alergias ?? ""} placeholder="Alergias" onChange={(e) => editarCampo(a.id, "alergias", e.target.value)} className="border rounded px-2 py-1 text-sm flex-1" />
+                  <input value={a.necessidades ?? ""} placeholder="Necessidades" onChange={(e) => editarCampo(a.id, "necessidades", e.target.value)} className="border rounded px-2 py-1 text-sm flex-1" />
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => salvarEdicao(a)} className="text-xs text-green-600 font-medium">Salvar</button>
-                  <button onClick={() => setEditando(null)} className="text-xs text-gray-400">Cancelar</button>
+                  <button onClick={() => setEditando(null)} className="text-xs text-stone-400">Cancelar</button>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <div>
                   <p className="font-medium text-sm">{a.nome}{a.idade ? `, ${a.idade}` : ""}</p>
-                  <p className="text-xs text-gray-400">{a.email}{a.contato ? ` · ${a.contato}` : ""}</p>
+                  <p className="text-xs text-stone-400">
+                    {a.email ?? "sem e-mail"}{a.contato ? ` · ${a.contato}` : ""}
+                  </p>
+                  {a.sacramentos && <p className="text-xs text-violet-700">Sacramentos: {a.sacramentos}</p>}
+                  {(a.alergias || a.necessidades) && (
+                    <p className="text-xs text-amber-700">
+                      Saúde: {[a.alergias, a.necessidades].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setEditando(a.id)} className="text-xs text-violet-400 hover:text-violet-600">Editar</button>
+                  <button onClick={() => setEditando(a.id)} className="text-xs text-violet-500 hover:text-violet-700">Editar</button>
                   <button onClick={() => remover(a.id)} className="text-xs text-red-400 hover:text-red-600">Remover</button>
                 </div>
               </div>

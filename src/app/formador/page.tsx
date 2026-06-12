@@ -49,6 +49,7 @@ export default async function FormadorPage() {
       totalEncontros: enc.length,
       crismandos: v.turma.crismandos.map((c) => ({
         id: c.id, nome: c.nome, email: c.email, contato: c.contato, idade: c.idade,
+        dataNascimento: c.dataNascimento, sacramentos: c.sacramentos, alergias: c.alergias, necessidades: c.necessidades,
       })),
       encontroAtivo: v.turma.encontros[0]
         ? { id: v.turma.encontros[0].id, token: v.turma.encontros[0].token,
