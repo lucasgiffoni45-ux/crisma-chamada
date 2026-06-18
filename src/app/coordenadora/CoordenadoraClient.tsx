@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BarChart, DonutTaxa } from "@/components/Charts";
+import { PageHeader, SairLink, SectionTitle, Card, Botao, Badge, Avatar, EmptyState, LogTimeline } from "@/components/ui";
 
 type Formador = { id: string; name: string | null; email: string | null; turmas: { turmaId: string }[] };
 type Turma = {
@@ -47,23 +48,16 @@ export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais,
     }));
   }
 
+  const rotulo = (a: typeof aba) => (a === "geral" ? "Visão geral" : a === "turmas" ? "Turmas" : a === "formadores" ? "Formadores" : a === "alunos" ? "Alunos" : a === "calendario" ? "Calendário" : a === "historico" ? "Histórico" : "Registro");
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <svg viewBox="0 0 24 24" className="w-6 h-6 text-amber-600" fill="currentColor" aria-hidden="true">
-            <path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z" />
-          </svg>
-          <h1 className="text-2xl font-bold text-violet-800">Painel da Coordenadora</h1>
-        </div>
-        <a href="/api/auth/signout" className="text-sm text-stone-400 hover:text-stone-600">Sair</a>
-      </div>
+    <div className="max-w-3xl mx-auto p-4 sm:p-6">
+      <PageHeader titulo="Painel da Coordenadora" selo="Coordenadora" right={<SairLink />} />
 
-      <div className="flex gap-1 mb-6 border-b overflow-x-auto">
+      <div className="flex gap-1 mb-6 border-b border-stone-200 overflow-x-auto">
         {(["geral", "turmas", "formadores", "alunos", "calendario", "historico", "log"] as const).map((a) => (
           <button key={a} onClick={() => setAba(a)}
-            className={`px-3 py-2 text-sm font-medium whitespace-nowrap transition ${aba === a ? "border-b-2 border-violet-700 text-violet-800" : "text-stone-500 hover:text-stone-700"}`}>
-            {a === "geral" ? "Visão geral" : a === "turmas" ? "Turmas" : a === "formadores" ? "Formadores" : a === "alunos" ? "Alunos" : a === "calendario" ? "Calendário" : a === "historico" ? "Histórico" : "Registro"}
+            className={`px-3 py-2 text-sm font-medium whitespace-nowrap transition -mb-px border-b-2 ${aba === a ? "border-amber-400 text-violet-900" : "border-transparent text-stone-500 hover:text-stone-700"}`}>
+            {rotulo(a)}
           </button>
         ))}
       </div>
@@ -74,7 +68,7 @@ export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais,
       {aba === "alunos" && <AbaAlunos alunos={alunos} />}
       {aba === "calendario" && <AbaCalendario sabados={sabados} setSabados={setSabados} ano={ano} />}
       {aba === "historico" && <AbaHistorico encontros={encontros} />}
-      {aba === "log" && <AbaLog />}
+      {aba === "log" && <LogTimeline />}
     </div>
   );
 }
@@ -244,21 +238,25 @@ function AbaAlunos({ alunos }: { alunos: AlunoDetalhe[] }) {
 
   return (
     <div className="space-y-4">
-      <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar aluno pelo nome…" className="border rounded-lg px-3 py-2 text-sm w-full" />
+      <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar aluno pelo nome…" className="border border-stone-300 rounded-xl px-3 py-2 text-sm w-full bg-white" />
       <p className="text-xs text-stone-400">{filtrados.length} aluno(s). Toque num nome para ver todos os dados.</p>
-      {Object.keys(porTurma).length === 0 && <p className="text-sm text-stone-400 text-center">Nenhum aluno cadastrado.</p>}
+      {Object.keys(porTurma).length === 0 && <Card><EmptyState icon="👤" titulo="Nenhum aluno encontrado" /></Card>}
       {Object.entries(porTurma).map(([turma, lista]) => (
         <div key={turma}>
-          <h3 className="text-sm font-semibold text-violet-800 mb-1">{turma} <span className="text-stone-400 font-normal">({lista.length})</span></h3>
-          <div className="bg-white rounded-xl shadow divide-y">
+          <SectionTitle>{turma} <span className="text-stone-400 font-normal text-base">· {lista.length}</span></SectionTitle>
+          <Card className="divide-y divide-stone-100">
             {lista.map((a) => (
-              <div key={a.id} className="px-4 py-2">
-                <button onClick={() => setAberto(aberto === a.id ? null : a.id)} className="w-full flex items-center justify-between text-left">
-                  <span className="text-sm font-medium">{a.nome}{a.idade ? `, ${a.idade}` : ""}</span>
+              <div key={a.id} className="px-4 py-2.5">
+                <button onClick={() => setAberto(aberto === a.id ? null : a.id)} className="w-full flex items-center gap-3 text-left">
+                  <Avatar nome={a.nome} size={34} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-stone-800 truncate">{a.nome}{a.idade ? <span className="text-stone-400 font-normal">, {a.idade}</span> : ""}</p>
+                    {!a.email && <Badge tom="amber">sem e-mail</Badge>}
+                  </div>
                   <span className="text-xs text-stone-400">{aberto === a.id ? "▲" : "▼"}</span>
                 </button>
                 {aberto === a.id && (
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-stone-600">
+                  <div className="mt-3 ml-1 pl-3 border-l-2 border-amber-200 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-stone-600">
                     <Campo r="E-mail" v={a.email} />
                     <Campo r="WhatsApp" v={a.contato} />
                     <Campo r="Telefone" v={a.telefone} />
@@ -275,7 +273,7 @@ function AbaAlunos({ alunos }: { alunos: AlunoDetalhe[] }) {
                 )}
               </div>
             ))}
-          </div>
+          </Card>
         </div>
       ))}
     </div>
@@ -284,7 +282,7 @@ function AbaAlunos({ alunos }: { alunos: AlunoDetalhe[] }) {
 
 function Campo({ r, v }: { r: string; v: string | null }) {
   if (!v) return null;
-  return <p><span className="text-stone-400">{r}:</span> {v}</p>;
+  return <p><span className="text-stone-400">{r}:</span> <span className="text-stone-700">{v}</span></p>;
 }
 
 function AbaCalendario({ sabados, setSabados, ano }: { sabados: Sabado[]; setSabados: (s: Sabado[]) => void; ano: number }) {
@@ -343,36 +341,24 @@ function AbaCalendario({ sabados, setSabados, ano }: { sabados: Sabado[]; setSab
 function AbaHistorico({ encontros }: { encontros: Encontro[] }) {
   return (
     <div className="space-y-4">
-      <div className="text-center">
-        <a href="/api/relatorio" download className="text-sm text-violet-700 hover:underline">⬇ Exportar todas as presenças (CSV)</a>
-      </div>
-      {encontros.length === 0 && <p className="text-sm text-stone-400 text-center">Nenhum encontro realizado ainda.</p>}
+      <SectionTitle acao={<a href="/api/relatorio" download className="text-xs text-violet-600 hover:underline">⬇ CSV completo</a>}>Histórico de encontros</SectionTitle>
+      {encontros.length === 0 && <Card><EmptyState icon="📅" titulo="Nenhum encontro realizado ainda" /></Card>}
       {encontros.map((e) => (
-        <div key={e.id} className="bg-white rounded-xl shadow p-4">
-          <p className="font-semibold text-sm text-stone-700">{e.turma.nome} — {new Date(e.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</p>
-          {e.tema && <p className="text-xs text-stone-500">Tema: {e.tema}</p>}
-          <p className="text-xs text-stone-400 mb-1">{e.attendances.length} presença(s)</p>
-          <p className="text-xs text-stone-600">{e.attendances.map((a) => a.crismando.nome).join(", ")}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AbaLog() {
-  const [logs, setLogs] = useState<any[] | null>(null);
-  if (logs === null) {
-    fetch("/api/log").then((r) => r.json()).then(setLogs).catch(() => setLogs([]));
-    return <p className="text-sm text-stone-400 text-center">Carregando...</p>;
-  }
-  return (
-    <div className="bg-white rounded-xl shadow divide-y">
-      {logs.length === 0 && <p className="p-4 text-sm text-stone-400 text-center">Nenhuma movimentação registrada.</p>}
-      {logs.map((l) => (
-        <div key={l.id} className="px-4 py-2 text-xs flex justify-between gap-2">
-          <span className="text-stone-700"><b>{l.autor}</b> {l.acao}{l.alvo ? ` — ${l.alvo}` : ""}</span>
-          <span className="text-stone-400 whitespace-nowrap">{new Date(l.createdAt).toLocaleDateString("pt-BR")} {new Date(l.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-        </div>
+        <Card key={e.id} className="p-4">
+          <div className="flex items-center justify-between">
+            <p className="font-semibold text-sm text-violet-900">{e.turma.nome}</p>
+            <Badge tom="violet">{new Date(e.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</Badge>
+          </div>
+          {e.tema && <p className="text-xs text-stone-500 mt-0.5">Tema: {e.tema}</p>}
+          <p className="text-xs text-stone-400 mt-1 mb-2">{e.attendances.length} presença(s)</p>
+          <div className="flex flex-wrap gap-1">
+            {e.attendances.map((a, i) => (
+              <span key={i} className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 rounded-full pl-1 pr-2 py-0.5">
+                <Avatar nome={a.crismando.nome} size={18} /> {a.crismando.nome.split(" ")[0]}
+              </span>
+            ))}
+          </div>
+        </Card>
       ))}
     </div>
   );

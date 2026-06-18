@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { BarChart } from "@/components/Charts";
+import { PageHeader, SairLink, SectionTitle, StatCard, Card, Botao, Badge, Avatar, EmptyState } from "@/components/ui";
 
 type Aluno = {
   id: string; nome: string; email: string | null; contato: string | null; idade: number | null;
@@ -28,44 +29,33 @@ export default function FormadorClient({ turmasIniciais, sabados, nome }: {
 
   if (!turma) {
     return (
-      <div className="max-w-2xl mx-auto p-6 text-center">
-        <h1 className="text-2xl font-bold text-violet-800 mb-2">Painel do Formador</h1>
-        <p className="text-stone-500">Você ainda não foi atribuído a nenhuma turma. Fale com a coordenadora.</p>
-        <a href="/api/auth/signout" className="mt-4 inline-block text-sm text-stone-400 hover:text-stone-600">Sair</a>
+      <div className="max-w-2xl mx-auto p-4 sm:p-6">
+        <PageHeader titulo="Painel do Formador" selo="Formador" right={<SairLink />} />
+        <Card><EmptyState icon="🎓" titulo="Você ainda não tem turma" texto="Fale com a coordenadora para ser atribuído a uma turma." /></Card>
       </div>
     );
   }
 
+  const rotulo = (a: typeof aba) => (a === "chamada" ? "Chamada" : a === "alunos" ? "Alunos" : a === "graficos" ? "Gráficos" : "Calendário");
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <svg viewBox="0 0 24 24" className="w-6 h-6 text-amber-600" fill="currentColor" aria-hidden="true">
-            <path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z" />
-          </svg>
-          <h1 className="text-2xl font-bold text-violet-800">Painel do Formador</h1>
-        </div>
-        <a href="/api/auth/signout" className="text-sm text-stone-400 hover:text-stone-600">Sair</a>
-      </div>
-      <p className="text-sm text-stone-400 mb-4">Olá, {nome}.</p>
+    <div className="max-w-3xl mx-auto p-4 sm:p-6">
+      <PageHeader titulo="Painel do Formador" selo="Formador" subtitulo={`Olá, ${nome}.`} right={<SairLink />} />
 
       {/* Seletor de turma (se houver mais de uma) */}
-      {turmas.length > 1 && (
-        <select
-          value={turmaSelId}
-          onChange={(e) => setTurmaSelId(e.target.value)}
-          className="mb-4 border rounded-lg px-3 py-2 text-sm w-full"
-        >
+      {turmas.length > 1 ? (
+        <select value={turmaSelId} onChange={(e) => setTurmaSelId(e.target.value)}
+          className="mb-4 border border-stone-300 rounded-xl px-3 py-2 text-sm w-full bg-white">
           {turmas.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
         </select>
+      ) : (
+        <p className="mb-4 font-display text-xl font-semibold text-violet-900">{turma.nome}</p>
       )}
-      {turmas.length === 1 && <p className="mb-4 font-semibold text-stone-700">{turma.nome}</p>}
 
-      <div className="flex gap-1 mb-6 border-b">
+      <div className="flex gap-1 mb-6 border-b border-stone-200 overflow-x-auto">
         {(["chamada", "alunos", "graficos", "calendario"] as const).map((a) => (
           <button key={a} onClick={() => setAba(a)}
-            className={`px-4 py-2 text-sm font-medium transition ${aba === a ? "border-b-2 border-violet-700 text-violet-800" : "text-stone-500 hover:text-stone-700"}`}>
-            {a === "chamada" ? "Chamada" : a === "alunos" ? "Alunos" : a === "graficos" ? "Gráficos" : "Calendário"}
+            className={`px-3 py-2 text-sm font-medium whitespace-nowrap transition -mb-px border-b-2 ${aba === a ? "border-amber-400 text-violet-900" : "border-transparent text-stone-500 hover:text-stone-700"}`}>
+            {rotulo(a)}
           </button>
         ))}
       </div>
@@ -148,75 +138,77 @@ function AbaChamada({ turma, onChange }: { turma: Turma; onChange: (p: Partial<T
 
   if (!encontro) {
     return (
-      <div className="flex flex-col items-center gap-4 p-6 bg-white rounded-xl shadow">
-        <p className="text-gray-500">Nenhum encontro aberto.</p>
+      <Card className="p-6 flex flex-col items-center gap-4">
+        <EmptyState icon="📅" titulo="Nenhum encontro aberto" texto="Escolha a data do sábado e abra o encontro para gerar o QR Code." />
         <div className="flex flex-col gap-2 w-full max-w-xs">
-          <label className="text-xs text-gray-500">Data do encontro (sábado)</label>
-          <input type="date" value={data} onChange={(e) => setData(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
-          <label className="text-xs text-gray-500">Horário (opcional)</label>
-          <input type="time" value={horario} onChange={(e) => setHorario(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
+          <label className="text-xs text-stone-500">Data do encontro (sábado)</label>
+          <input type="date" value={data} onChange={(e) => setData(e.target.value)} className="border border-stone-300 rounded-xl px-3 py-2 text-sm" />
+          <label className="text-xs text-stone-500">Horário (opcional)</label>
+          <input type="time" value={horario} onChange={(e) => setHorario(e.target.value)} className="border border-stone-300 rounded-xl px-3 py-2 text-sm" />
         </div>
-        <button onClick={abrir} className="rounded-lg bg-violet-600 px-6 py-3 font-semibold text-white hover:bg-violet-700 transition">
-          Abrir encontro e gerar QR
-        </button>
-      </div>
+        <Botao onClick={abrir} className="px-6 py-3">Abrir encontro e gerar QR</Botao>
+      </Card>
     );
   }
 
   const presentesIds = new Set(presentes.map((p) => p.id));
+  const total = turma.crismandos.length;
+  const pct = total > 0 ? Math.round((presentes.length / total) * 100) : 0;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-center gap-4 p-6 bg-white rounded-xl shadow">
-        <p className="text-green-600 font-semibold">✅ Encontro aberto — {new Date(encontro.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</p>
-        <QRCodeSVG value={presencaUrl} size={220} />
-        <p className="text-xs text-gray-400 break-all text-center">{presencaUrl}</p>
-        <button onClick={fechar} className="rounded-lg bg-red-500 px-6 py-2 font-semibold text-white hover:bg-red-600 transition">
-          Encerrar encontro
-        </button>
-        <p className="text-sm font-semibold text-gray-600">
-          Presentes: <span className="text-violet-600">{presentes.length}</span>
-          <span className="text-gray-400"> / {turma.crismandos.length}</span>
-        </p>
-      </div>
+      {/* QR + status */}
+      <Card className="p-6 flex flex-col items-center gap-3 text-center">
+        <Badge tom="green">● Encontro aberto · {new Date(encontro.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</Badge>
+        <div className="p-3 bg-white rounded-2xl ring-1 ring-stone-200">
+          <QRCodeSVG value={presencaUrl} size={200} fgColor="#2e1065" />
+        </div>
+        <p className="text-xs text-stone-400 break-all max-w-xs">{presencaUrl}</p>
+        <div className="flex items-baseline gap-1">
+          <span className="font-display text-4xl font-bold text-violet-900">{presentes.length}</span>
+          <span className="text-stone-400">/ {total} presentes</span>
+          <span className="ml-2 text-sm font-semibold text-emerald-600">{pct}%</span>
+        </div>
+        <Botao variante="perigo" onClick={fechar}>Encerrar encontro</Botao>
+      </Card>
 
       {/* Anotações do encontro */}
-      <div className="bg-white rounded-xl shadow p-4 space-y-3">
-        <h3 className="font-semibold text-gray-700 text-sm">Anotações do encontro</h3>
-        <input value={tema} onChange={(e) => setTema(e.target.value)} placeholder="Tema"
-          className="border rounded-lg px-3 py-2 text-sm w-full" />
+      <Card className="p-4 space-y-3">
+        <SectionTitle>Anotações do encontro</SectionTitle>
+        <input value={tema} onChange={(e) => setTema(e.target.value)} placeholder="Tema do encontro"
+          className="border border-stone-300 rounded-xl px-3 py-2 text-sm w-full" />
         <input value={licao} onChange={(e) => setLicao(e.target.value)} placeholder="Lição de casa"
-          className="border rounded-lg px-3 py-2 text-sm w-full" />
-        <button onClick={salvarNotas} className="text-sm rounded-lg bg-violet-600 px-4 py-2 font-semibold text-white hover:bg-violet-700">
-          Salvar
-        </button>
-      </div>
+          className="border border-stone-300 rounded-xl px-3 py-2 text-sm w-full" />
+        <Botao onClick={salvarNotas} className="text-sm">Salvar anotações</Botao>
+      </Card>
 
-      {/* Lista de alunos com presença + anotação curta */}
-      <div className="bg-white rounded-xl shadow divide-y">
-        {turma.crismandos.map((a) => (
-          <div key={a.id} className="px-4 py-3 flex flex-col gap-1">
-            <div className="flex items-center justify-between">
-              <span className={`text-sm ${presentesIds.has(a.id) ? "text-green-700 font-medium" : "text-gray-400"}`}>
-                {presentesIds.has(a.id) ? "✓" : "○"} {a.nome}
-              </span>
-            </div>
-            <input
-              maxLength={50}
-              value={anotacoes[a.id] ?? ""}
-              onChange={(e) => setAnotacoes((p) => ({ ...p, [a.id]: e.target.value }))}
-              onBlur={(e) => salvarAnotacaoAluno(a.id, e.target.value)}
-              placeholder="Anotação (máx. 50)"
-              className="border rounded px-2 py-1 text-xs text-gray-600"
-            />
-          </div>
-        ))}
-      </div>
-
-      <div className="text-center">
-        <a href={`/api/relatorio?turmaId=${turma.id}`} download className="text-sm text-violet-500 hover:underline">
-          ⬇ Exportar presenças da turma (CSV)
-        </a>
+      {/* Tabela de presença + anotação por aluno */}
+      <div>
+        <SectionTitle acao={<a href={`/api/relatorio?turmaId=${turma.id}`} download className="text-xs text-violet-600 hover:underline">⬇ CSV</a>}>Presença</SectionTitle>
+        <Card className="divide-y divide-stone-100">
+          {turma.crismandos.map((a) => {
+            const presente = presentesIds.has(a.id);
+            return (
+              <div key={a.id} className={`px-4 py-2.5 flex items-center gap-3 ${presente ? "bg-emerald-50/40" : ""}`}>
+                <Avatar nome={a.nome} size={34} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-stone-800 truncate">{a.nome}</p>
+                  <input
+                    maxLength={50}
+                    value={anotacoes[a.id] ?? ""}
+                    onChange={(e) => setAnotacoes((p) => ({ ...p, [a.id]: e.target.value }))}
+                    onBlur={(e) => salvarAnotacaoAluno(a.id, e.target.value)}
+                    placeholder="Anotação (máx. 50)"
+                    className="mt-1 w-full bg-transparent border-b border-dashed border-stone-200 text-xs text-stone-500 focus:outline-none focus:border-violet-400"
+                  />
+                </div>
+                {presente
+                  ? <Badge tom="green">✓ Presente</Badge>
+                  : <Badge tom="stone">Aguardando</Badge>}
+              </div>
+            );
+          })}
+        </Card>
       </div>
     </div>
   );
@@ -234,6 +226,8 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
   const [necessidades, setNecessidades] = useState("");
   const [erro, setErro] = useState("");
   const [editando, setEditando] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
+  const [mostrarForm, setMostrarForm] = useState(false);
 
   async function adicionar(e: React.FormEvent) {
     e.preventDefault();
@@ -270,29 +264,40 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
     onChange({ crismandos: turma.crismandos.map((a) => (a.id === id ? { ...a, [campo]: campo === "idade" ? (valor ? Number(valor) : null) : valor } : a)) });
   }
 
+  const filtrados = turma.crismandos.filter((a) => a.nome.toLowerCase().includes(busca.toLowerCase()));
+
   return (
     <div className="space-y-4">
-      <form onSubmit={adicionar} className="flex flex-col gap-3 bg-white p-4 rounded-xl shadow">
-        <h2 className="font-semibold text-stone-700">Novo aluno</h2>
-        <input type="text" placeholder="Nome completo" value={nome} required onChange={(e) => setNome(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
-        <input type="email" placeholder="E-mail (conta Google) — opcional, pode adicionar depois" value={email} onChange={(e) => setEmail(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
-        <div className="flex gap-2">
-          <input type="text" placeholder="WhatsApp / contato" value={contato} onChange={(e) => setContato(e.target.value)} className="border rounded-lg px-3 py-2 text-sm flex-1" />
-          <input type="number" placeholder="Idade" value={idade} onChange={(e) => setIdade(e.target.value)} className="border rounded-lg px-3 py-2 text-sm w-24" />
-        </div>
-        <input type="text" placeholder="Data de nascimento (opcional)" value={dataNascimento} onChange={(e) => setNascimento(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
-        <input type="text" placeholder="Sacramentos recebidos (ex: Batismo)" value={sacramentos} onChange={(e) => setSacramentos(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
-        <div className="flex gap-2">
-          <input type="text" placeholder="Alergias" value={alergias} onChange={(e) => setAlergias(e.target.value)} className="border rounded-lg px-3 py-2 text-sm flex-1" />
-          <input type="text" placeholder="Necessidades especiais" value={necessidades} onChange={(e) => setNecessidades(e.target.value)} className="border rounded-lg px-3 py-2 text-sm flex-1" />
-        </div>
-        {erro && <p className="text-red-500 text-sm">{erro}</p>}
-        <button type="submit" className="rounded-lg bg-violet-700 px-4 py-2 font-semibold text-white hover:bg-violet-800 transition">Cadastrar</button>
-      </form>
+      <div className="flex gap-2">
+        <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar aluno…" className="border border-stone-300 rounded-xl px-3 py-2 text-sm flex-1 bg-white" />
+        <Botao variante={mostrarForm ? "suave" : "primario"} onClick={() => setMostrarForm((v) => !v)}>{mostrarForm ? "Fechar" : "＋ Novo"}</Botao>
+      </div>
 
-      <div className="bg-white rounded-xl shadow divide-y">
-        {turma.crismandos.length === 0 && <p className="p-4 text-sm text-gray-400 text-center">Nenhum aluno cadastrado.</p>}
-        {turma.crismandos.map((a) => (
+      {mostrarForm && (
+        <Card className="p-4">
+          <form onSubmit={adicionar} className="flex flex-col gap-3">
+            <SectionTitle>Novo aluno</SectionTitle>
+            <input type="text" placeholder="Nome completo" value={nome} required onChange={(e) => setNome(e.target.value)} className="border border-stone-300 rounded-xl px-3 py-2 text-sm" />
+            <input type="email" placeholder="E-mail (Google) — opcional, pode adicionar depois" value={email} onChange={(e) => setEmail(e.target.value)} className="border border-stone-300 rounded-xl px-3 py-2 text-sm" />
+            <div className="flex gap-2">
+              <input type="text" placeholder="WhatsApp / contato" value={contato} onChange={(e) => setContato(e.target.value)} className="border border-stone-300 rounded-xl px-3 py-2 text-sm flex-1" />
+              <input type="number" placeholder="Idade" value={idade} onChange={(e) => setIdade(e.target.value)} className="border border-stone-300 rounded-xl px-3 py-2 text-sm w-24" />
+            </div>
+            <input type="text" placeholder="Data de nascimento (opcional)" value={dataNascimento} onChange={(e) => setNascimento(e.target.value)} className="border border-stone-300 rounded-xl px-3 py-2 text-sm" />
+            <input type="text" placeholder="Sacramentos recebidos (ex: Batismo)" value={sacramentos} onChange={(e) => setSacramentos(e.target.value)} className="border border-stone-300 rounded-xl px-3 py-2 text-sm" />
+            <div className="flex gap-2">
+              <input type="text" placeholder="Alergias" value={alergias} onChange={(e) => setAlergias(e.target.value)} className="border border-stone-300 rounded-xl px-3 py-2 text-sm flex-1" />
+              <input type="text" placeholder="Necessidades especiais" value={necessidades} onChange={(e) => setNecessidades(e.target.value)} className="border border-stone-300 rounded-xl px-3 py-2 text-sm flex-1" />
+            </div>
+            {erro && <p className="text-rose-500 text-sm">{erro}</p>}
+            <Botao type="submit">Cadastrar</Botao>
+          </form>
+        </Card>
+      )}
+
+      <Card className="divide-y divide-stone-100">
+        {filtrados.length === 0 && <EmptyState icon="👤" titulo={busca ? "Nenhum aluno encontrado" : "Nenhum aluno cadastrado"} />}
+        {filtrados.map((a) => (
           <div key={a.id} className="px-4 py-3">
             {editando === a.id ? (
               <div className="flex flex-col gap-2">
@@ -314,29 +319,27 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
                 </div>
               </div>
             ) : (
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-medium text-sm">{a.nome}{a.idade ? `, ${a.idade}` : ""}</p>
-                  <p className="text-xs text-stone-400">
-                    {a.email ?? "sem e-mail"}{a.contato ? ` · ${a.contato}` : ""}
-                  </p>
-                  {a.sacramentos && <p className="text-xs text-violet-700">Sacramentos: {a.sacramentos}</p>}
-                  {(a.alergias || a.necessidades) && (
-                    <p className="text-xs text-amber-700">
-                      Saúde: {[a.alergias, a.necessidades].filter(Boolean).join(" · ")}
-                    </p>
-                  )}
+              <div className="flex items-start gap-3">
+                <Avatar nome={a.nome} size={38} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-stone-800">{a.nome}{a.idade ? <span className="text-stone-400 font-normal">, {a.idade}</span> : ""}</p>
+                  <p className="text-xs text-stone-400 truncate">{a.contato ?? "sem contato"}</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {!a.email && <Badge tom="amber">sem e-mail</Badge>}
+                    {a.sacramentos && <Badge tom="violet">{a.sacramentos}</Badge>}
+                    {(a.alergias || a.necessidades) && <Badge tom="red">⚕ {[a.alergias, a.necessidades].filter(Boolean).join(" · ")}</Badge>}
+                  </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col items-end gap-1 shrink-0">
                   <button onClick={() => setEditando(a.id)} className="text-xs text-violet-500 hover:text-violet-700">Editar</button>
-                  <button onClick={() => remover(a.id)} className="text-xs text-red-400 hover:text-red-600">Remover</button>
+                  <button onClick={() => remover(a.id)} className="text-xs text-rose-400 hover:text-rose-600">Remover</button>
                 </div>
               </div>
             )}
           </div>
         ))}
-      </div>
-      <p className="text-xs text-stone-400 text-center">{turma.crismandos.length} aluno(s)</p>
+      </Card>
+      <p className="text-xs text-stone-400 text-center">{filtrados.length} de {turma.crismandos.length} aluno(s)</p>
     </div>
   );
 }

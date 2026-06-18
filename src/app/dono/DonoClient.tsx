@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BarChart } from "@/components/Charts";
+import { PageHeader, SairLink, SectionTitle, StatCard, Card, Botao, LogTimeline, EmptyState, Avatar } from "@/components/ui";
 
 type Coord = { id: string; name: string | null; email: string | null };
 type Turma = {
@@ -28,31 +29,23 @@ export default function DonoClient({
 }) {
   const [aba, setAba] = useState<"visao" | "coordenadoras" | "registro">("visao");
 
+  const rotulo = (a: typeof aba) => (a === "visao" ? "Visão geral" : a === "coordenadoras" ? "Coordenadoras" : "Registro");
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-2">
-          <svg viewBox="0 0 24 24" className="w-6 h-6 text-amber-600" fill="currentColor" aria-hidden="true">
-            <path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z" />
-          </svg>
-          <h1 className="text-2xl font-bold text-violet-800">Painel do Dono</h1>
-        </div>
-        <a href="/api/auth/signout" className="text-sm text-stone-400 hover:text-stone-600">Sair</a>
-      </div>
-      <p className="text-sm text-stone-400 mb-6">Olá, {nome}. Você tem acesso total à plataforma.</p>
+    <div className="max-w-3xl mx-auto p-4 sm:p-6">
+      <PageHeader titulo="Painel do Dono" selo="Dono" subtitulo={`Olá, ${nome}. Acesso total à plataforma.`} right={<SairLink />} />
 
-      <div className="flex gap-1 mb-6 border-b">
+      <div className="flex gap-1 mb-6 border-b border-stone-200 overflow-x-auto">
         {(["visao", "coordenadoras", "registro"] as const).map((a) => (
           <button key={a} onClick={() => setAba(a)}
-            className={`px-4 py-2 text-sm font-medium transition ${aba === a ? "border-b-2 border-violet-700 text-violet-800" : "text-stone-500 hover:text-stone-700"}`}>
-            {a === "visao" ? "Visão geral" : a === "coordenadoras" ? "Coordenadoras" : "Registro"}
+            className={`px-3 py-2 text-sm font-medium whitespace-nowrap transition -mb-px border-b-2 ${aba === a ? "border-amber-400 text-violet-900" : "border-transparent text-stone-500 hover:text-stone-700"}`}>
+            {rotulo(a)}
           </button>
         ))}
       </div>
 
       {aba === "visao" && <AbaVisao stats={stats} turmas={turmas} estatisticas={estatisticas} />}
       {aba === "coordenadoras" && <AbaCoordenadoras inicial={coordenadorasIniciais} />}
-      {aba === "registro" && <AbaRegistro />}
+      {aba === "registro" && <LogTimeline />}
     </div>
   );
 }
@@ -68,36 +61,31 @@ function AbaVisao({ stats, turmas, estatisticas }: { stats: Stats; turmas: Turma
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {cards.map((c) => (
-          <div key={c.rotulo} className="bg-white rounded-xl shadow p-4 text-center">
-            <p className="text-3xl font-bold text-violet-800">{c.valor}</p>
-            <p className="text-xs text-stone-500 mt-1">{c.rotulo}</p>
-          </div>
-        ))}
+        {cards.map((c) => <StatCard key={c.rotulo} valor={c.valor} rotulo={c.rotulo} />)}
       </div>
 
       {estatisticas.length > 0 && (
         <div className="space-y-4">
           <BarChart titulo="Alunos por turma" dados={estatisticas.map((e) => ({ label: e.nome, valor: e.alunos }))} />
-          <BarChart titulo="Faltas por turma" dados={estatisticas.map((e) => ({ label: e.nome, valor: e.faltas }))} cor="bg-red-400" />
-          <BarChart titulo="Frequência por turma (%)" dados={estatisticas.map((e) => ({ label: e.nome, valor: e.frequencia }))} sufixo="%" maxFixo={100} cor="bg-green-500" />
+          <BarChart titulo="Faltas por turma" dados={estatisticas.map((e) => ({ label: e.nome, valor: e.faltas }))} cor="bg-rose-400" />
+          <BarChart titulo="Frequência por turma (%)" dados={estatisticas.map((e) => ({ label: e.nome, valor: e.frequencia }))} sufixo="%" maxFixo={100} cor="bg-emerald-500" />
         </div>
       )}
 
       <div>
-        <h2 className="text-sm font-semibold text-stone-600 mb-2">Turmas</h2>
-        <div className="bg-white rounded-xl shadow divide-y">
-          {turmas.length === 0 && <p className="p-4 text-sm text-stone-400 text-center">Nenhuma turma criada ainda.</p>}
+        <SectionTitle>Turmas</SectionTitle>
+        <Card className="divide-y divide-stone-100">
+          {turmas.length === 0 && <EmptyState icon="🎓" titulo="Nenhuma turma criada ainda" />}
           {turmas.map((t) => (
             <div key={t.id} className="px-4 py-3">
-              <p className="font-medium text-sm">{t.nome}</p>
+              <p className="font-medium text-sm text-stone-800">{t.nome}</p>
               <p className="text-xs text-stone-400">
                 {t._count.crismandos} aluno(s) · {t._count.encontros} encontro(s) ·{" "}
                 {t.formadores.map((f) => f.user.name ?? f.user.email).join(", ") || "sem formador"}
               </p>
             </div>
           ))}
-        </div>
+        </Card>
       </div>
     </div>
   );
@@ -139,57 +127,33 @@ function AbaCoordenadoras({ inicial }: { inicial: Coord[] }) {
 
   return (
     <div className="space-y-4">
-      <form onSubmit={adicionar} className="flex flex-col gap-3 bg-white p-4 rounded-xl shadow">
-        <h2 className="font-semibold text-stone-700">Nova coordenadora</h2>
-        <input
-          type="text" placeholder="Nome" value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-        />
-        <input
-          type="email" placeholder="E-mail (conta Google)" value={email} required
-          onChange={(e) => setEmail(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-        />
-        {erro && <p className="text-red-500 text-sm">{erro}</p>}
-        <button type="submit" className="rounded-lg bg-violet-700 px-4 py-2 font-semibold text-white hover:bg-violet-800 transition">
-          Cadastrar
-        </button>
-      </form>
+      <Card className="p-4">
+        <form onSubmit={adicionar} className="flex flex-col gap-3">
+          <SectionTitle>Nova coordenadora</SectionTitle>
+          <input type="text" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)}
+            className="border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
+          <input type="email" placeholder="E-mail (conta Google)" value={email} required onChange={(e) => setEmail(e.target.value)}
+            className="border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
+          {erro && <p className="text-rose-500 text-sm">{erro}</p>}
+          <Botao type="submit">Cadastrar</Botao>
+        </form>
+      </Card>
 
-      <div className="bg-white rounded-xl shadow divide-y">
-        {coords.length === 0 && <p className="p-4 text-sm text-stone-400 text-center">Nenhuma coordenadora ainda.</p>}
+      <Card className="divide-y divide-stone-100">
+        {coords.length === 0 && <EmptyState icon="⭐" titulo="Nenhuma coordenadora ainda" />}
         {coords.map((c) => (
           <div key={c.id} className="flex items-center justify-between px-4 py-3">
-            <div>
-              <p className="font-medium text-sm">{c.name ?? "(sem nome)"}</p>
-              <p className="text-xs text-stone-400">{c.email}</p>
+            <div className="flex items-center gap-3">
+              <Avatar nome={c.name ?? c.email ?? "?"} />
+              <div>
+                <p className="font-medium text-sm text-stone-800">{c.name ?? "(sem nome)"}</p>
+                <p className="text-xs text-stone-400">{c.email}</p>
+              </div>
             </div>
-            <button onClick={() => remover(c.id)} className="text-xs text-red-400 hover:text-red-600">Remover</button>
+            <button onClick={() => remover(c.id)} className="text-xs text-rose-400 hover:text-rose-600">Remover</button>
           </div>
         ))}
-      </div>
-    </div>
-  );
-}
-
-function AbaRegistro() {
-  const [logs, setLogs] = useState<any[] | null>(null);
-  if (logs === null) {
-    fetch("/api/log").then((r) => r.json()).then(setLogs).catch(() => setLogs([]));
-    return <p className="text-sm text-stone-400 text-center">Carregando...</p>;
-  }
-  return (
-    <div className="bg-white rounded-xl shadow divide-y">
-      {logs.length === 0 && <p className="p-4 text-sm text-stone-400 text-center">Nenhuma movimentação registrada.</p>}
-      {logs.map((l) => (
-        <div key={l.id} className="px-4 py-2 text-xs flex justify-between gap-2">
-          <span className="text-stone-700"><b>{l.autor}</b> {l.acao}{l.alvo ? ` — ${l.alvo}` : ""}</span>
-          <span className="text-stone-400 whitespace-nowrap">
-            {new Date(l.createdAt).toLocaleDateString("pt-BR")} {new Date(l.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-          </span>
-        </div>
-      ))}
+      </Card>
     </div>
   );
 }

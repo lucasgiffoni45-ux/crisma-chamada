@@ -1,6 +1,7 @@
 import { auth, papelDe } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Cruz, Card } from "@/components/ui";
 
 export default async function Home() {
   const session = await auth();
@@ -13,33 +14,34 @@ export default async function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <div className="text-center">
-        <svg viewBox="0 0 24 24" className="w-8 h-8 mx-auto mb-1 text-amber-600" fill="currentColor" aria-hidden="true">
-          <path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z" />
-        </svg>
-        <h1 className="text-3xl font-bold text-violet-800">Crisma — Chamada</h1>
-        <p className="mt-2 text-stone-500">Sistema de presença para a catequese</p>
-      </div>
+    <main className="flex min-h-screen flex-col items-center justify-center p-6">
+      <Card className="w-full max-w-sm p-8 text-center overflow-hidden">
+        <span className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-violet-950 ring-4 ring-amber-300/30 mb-4">
+          <Cruz className="w-9 h-9 text-amber-300" />
+        </span>
+        <h1 className="font-display text-5xl font-bold text-violet-950 leading-none tracking-tight">Crisma</h1>
+        <p className="font-display text-2xl text-amber-600/90 -mt-1">Chamada</p>
+        <div className="mx-auto my-4 h-px w-16 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
+        <p className="text-sm text-stone-500">Sistema de presença para a catequese</p>
 
-      {session ? (
-        <div className="text-center">
-          <p className="text-gray-600">Olá, {session.user?.name}.</p>
-          <p className="mt-1 text-sm text-gray-400 max-w-sm">
-            Escaneie o QR Code exibido pelo seu formador para registrar presença.
-          </p>
-          <a href="/api/auth/signout" className="mt-4 inline-block text-sm text-gray-400 hover:text-gray-600">
-            Sair
-          </a>
-        </div>
-      ) : (
-        <Link
-          href="/api/auth/signin"
-          className="rounded-lg bg-violet-600 px-6 py-3 font-semibold text-white hover:bg-violet-700 transition"
-        >
-          Entrar com Google
-        </Link>
-      )}
+        {session ? (
+          <div className="mt-6">
+            <p className="text-stone-700">Olá, {session.user?.name}.</p>
+            <p className="mt-1 text-sm text-stone-400">
+              Escaneie o QR Code exibido pelo seu formador para registrar presença.
+            </p>
+            <a href="/api/auth/signout" className="mt-4 inline-block text-sm text-stone-400 hover:text-stone-600">Sair</a>
+          </div>
+        ) : (
+          <Link
+            href="/api/auth/signin"
+            className="mt-6 inline-flex items-center justify-center gap-2 w-full rounded-xl bg-violet-900 px-6 py-3 font-semibold text-white hover:bg-violet-950 transition shadow-sm ring-1 ring-amber-300/20"
+          >
+            Entrar com Google
+          </Link>
+        )}
+      </Card>
+      <p className="mt-6 font-display text-sm italic text-stone-400">“Deixai vir a mim as criancinhas” · Mc 10,14</p>
     </main>
   );
 }
