@@ -8,7 +8,26 @@ import { PageHeader, SairLink, SectionTitle, StatCard, Card, Botao, Badge, Avata
 type Aluno = {
   id: string; nome: string; email: string | null; contato: string | null; idade: number | null;
   dataNascimento: string | null; sacramentos: string | null; alergias: string | null; necessidades: string | null;
+  alerta?: boolean;
 };
+
+// Aniversariantes do mês atual (a partir do texto da data de nascimento).
+function aniversariantesDoMes(alunos: Aluno[]) {
+  const mes = new Date().getMonth() + 1;
+  return alunos
+    .map((a) => {
+      const m = a.dataNascimento?.match(/(\d{1,2})\s*\/\s*(\d{1,2})/);
+      return m ? { nome: a.nome, dia: Number(m[1]), mes: Number(m[2]) } : null;
+    })
+    .filter((x): x is { nome: string; dia: number; mes: number } => !!x && x.mes === mes)
+    .sort((a, b) => a.dia - b.dia);
+}
+
+// Próximo recado da coordenadora (sábado com mensagem, hoje ou no futuro).
+function proximoAviso(sabados: { data: string; mensagem: string | null; temEncontro: boolean; recesso: boolean }[]) {
+  const hoje = new Date().toISOString().slice(0, 10);
+  return sabados.find((s) => s.mensagem && s.data.slice(0, 10) >= hoje) ?? null;
+}
 type Encontro = { id: string; token: string; data: string | Date; horario: string | null; tema: string | null; licaoDeCasa: string | null };
 type Ponto = { label: string; valor: number };
 type Turma = { id: string; nome: string; crismandos: Aluno[]; encontroAtivo: Encontro | null; totalEncontros: number; graficos: { porEncontro: Ponto[]; porAluno: Ponto[] } };
@@ -40,6 +59,17 @@ export default function FormadorClient({ turmasIniciais, sabados, nome }: {
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
       <PageHeader titulo="Painel do Formador" selo="Formador" subtitulo={`Olá, ${nome}.`} right={<SairLink />} />
+
+      {/* Aviso da coordenadora */}
+      {(() => { const av = proximoAviso(sabados); return av ? (
+        <div className="mb-4 flex items-start gap-2 rounded-2xl bg-amber-50 ring-1 ring-amber-200 px-4 py-3">
+          <span className="text-lg">📣</span>
+          <div>
+            <p className="text-xs font-semibold text-amber-800">Aviso da coordenadora · {new Date(av.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })}</p>
+            <p className="text-sm text-amber-900">{av.mensagem}</p>
+          </div>
+        </div>
+      ) : null; })()}
 
       {/* Seletor de turma (se houver mais de uma) */}
       {turmas.length > 1 ? (
@@ -136,6 +166,18 @@ function AbaChamada({ turma, onChange }: { turma: Turma; onChange: (p: Partial<T
     });
   }
 
+  // Marcação manual (formador toca no aluno). Atualiza a lista na hora.
+  async function marcarManual(aluno: Aluno, presente: boolean) {
+    if (!encontro) return;
+    setPresentes((prev) => presente
+      ? (prev.some((p) => p.id === aluno.id) ? prev : [...prev, { id: aluno.id, nome: aluno.nome, marcadaEm: new Date().toISOString() }])
+      : prev.filter((p) => p.id !== aluno.id));
+    await fetch("/api/presenca/manual", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ encontroId: encontro.id, crismandoId: aluno.id, presente }),
+    });
+  }
+
   if (!encontro) {
     return (
       <Card className="p-6 flex flex-col items-center gap-4">
@@ -164,6 +206,12 @@ function AbaChamada({ turma, onChange }: { turma: Turma; onChange: (p: Partial<T
           <QRCodeSVG value={presencaUrl} size={200} fgColor="#2e1065" />
         </div>
         <p className="text-xs text-stone-400 break-all max-w-xs">{presencaUrl}</p>
+        <div className="flex gap-2">
+          <button onClick={() => { navigator.clipboard?.writeText(presencaUrl); }}
+            className="text-xs font-medium rounded-full px-3 py-1.5 bg-stone-100 text-stone-700 hover:bg-stone-200 transition">🔗 Copiar link</button>
+          <a href={`https://wa.me/?text=${encodeURIComponent("Marque sua presença na Crisma: " + presencaUrl)}`} target="_blank" rel="noopener noreferrer"
+            className="text-xs font-medium rounded-full px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition">💬 WhatsApp</a>
+        </div>
         <div className="flex items-baseline gap-1">
           <span className="font-display text-4xl font-bold text-violet-900">{presentes.length}</span>
           <span className="text-stone-400">/ {total} presentes</span>
@@ -202,13 +250,15 @@ function AbaChamada({ turma, onChange }: { turma: Turma; onChange: (p: Partial<T
                     className="mt-1 w-full bg-transparent border-b border-dashed border-stone-200 text-xs text-stone-500 focus:outline-none focus:border-violet-400"
                   />
                 </div>
-                {presente
-                  ? <Badge tom="green">✓ Presente</Badge>
-                  : <Badge tom="stone">Aguardando</Badge>}
+                <button onClick={() => marcarManual(a, !presente)}
+                  className={`shrink-0 text-xs font-semibold rounded-full px-3 py-1.5 ring-1 transition ${presente ? "bg-emerald-600 text-white ring-emerald-600" : "bg-white text-stone-500 ring-stone-300 hover:ring-emerald-400 hover:text-emerald-600"}`}>
+                  {presente ? "✓ Presente" : "Marcar"}
+                </button>
               </div>
             );
           })}
         </Card>
+        <p className="text-xs text-stone-400 text-center mt-2">Toque em “Marcar” para registrar presença manualmente (sem precisar do QR).</p>
       </div>
     </div>
   );
@@ -265,9 +315,19 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
   }
 
   const filtrados = turma.crismandos.filter((a) => a.nome.toLowerCase().includes(busca.toLowerCase()));
+  const niver = aniversariantesDoMes(turma.crismandos);
 
   return (
     <div className="space-y-4">
+      {niver.length > 0 && (
+        <div className="rounded-2xl bg-violet-50 ring-1 ring-violet-100 px-4 py-3">
+          <p className="text-xs font-semibold text-violet-800 mb-1">🎂 Aniversariantes do mês</p>
+          <div className="flex flex-wrap gap-1">
+            {niver.map((n) => <Badge key={n.nome} tom="violet">{n.nome.split(" ")[0]} · {String(n.dia).padStart(2, "0")}/{String(n.mes).padStart(2, "0")}</Badge>)}
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2">
         <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar aluno…" className="border border-stone-300 rounded-xl px-3 py-2 text-sm flex-1 bg-white" />
         <Botao variante={mostrarForm ? "suave" : "primario"} onClick={() => setMostrarForm((v) => !v)}>{mostrarForm ? "Fechar" : "＋ Novo"}</Botao>
@@ -325,6 +385,7 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
                   <p className="font-medium text-sm text-stone-800">{a.nome}{a.idade ? <span className="text-stone-400 font-normal">, {a.idade}</span> : ""}</p>
                   <p className="text-xs text-stone-400 truncate">{a.contato ?? "sem contato"}</p>
                   <div className="flex flex-wrap gap-1 mt-1">
+                    {a.alerta && <Badge tom="red">⚠ faltou os 2 últimos</Badge>}
                     {!a.email && <Badge tom="amber">sem e-mail</Badge>}
                     {a.sacramentos && <Badge tom="violet">{a.sacramentos}</Badge>}
                     {(a.alergias || a.necessidades) && <Badge tom="red">⚕ {[a.alergias, a.necessidades].filter(Boolean).join(" · ")}</Badge>}

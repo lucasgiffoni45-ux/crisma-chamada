@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 
@@ -8,6 +8,12 @@ const sans = Inter({ subsets: ["latin"], variable: "--font-sans" });
 export const metadata: Metadata = {
   title: "Crisma — Chamada",
   description: "Sistema de presença para formação de Crisma",
+  appleWebApp: { capable: true, title: "Crisma", statusBarStyle: "default" },
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2e1065",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

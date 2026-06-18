@@ -43,6 +43,10 @@ export default async function FormadorPage() {
       valor: enc.reduce((s, e) => s + (e.attendances.some((a) => a.crismandoId === c.id) ? 1 : 0), 0),
     }));
 
+    // Alerta de evasão: ausente nos 2 últimos encontros realizados.
+    const ultimos2 = enc.slice(-2);
+    const ausenteNos2 = (cid: string) => ultimos2.length === 2 && ultimos2.every((e) => !e.attendances.some((a) => a.crismandoId === cid));
+
     return {
       id: v.turma.id,
       nome: v.turma.nome,
@@ -50,6 +54,7 @@ export default async function FormadorPage() {
       crismandos: v.turma.crismandos.map((c) => ({
         id: c.id, nome: c.nome, email: c.email, contato: c.contato, idade: c.idade,
         dataNascimento: c.dataNascimento, sacramentos: c.sacramentos, alergias: c.alergias, necessidades: c.necessidades,
+        alerta: ausenteNos2(c.id),
       })),
       encontroAtivo: v.turma.encontros[0]
         ? { id: v.turma.encontros[0].id, token: v.turma.encontros[0].token,
