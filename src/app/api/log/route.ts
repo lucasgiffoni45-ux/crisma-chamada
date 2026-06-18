@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth, isCoordenadora, isDono } from "@/lib/auth";
+import { auth, isCoordenadora, isDono, orgIdDe } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Histórico leve de movimentações (coordenadora/dono). Últimos 100 registros.
+// Histórico leve de movimentações. Coordenadora vê só a SUA org; dono vê tudo.
 export async function GET() {
   const session = await auth();
   if (!isCoordenadora(session) && !isDono(session)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
+  const where = isDono(session) ? {} : { orgId: orgIdDe(session) };
   const logs = await prisma.logAtividade.findMany({
+    where,
     orderBy: { createdAt: "desc" },
     take: 100,
   });

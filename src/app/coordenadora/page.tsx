@@ -1,4 +1,4 @@
-import { auth, isCoordenadora } from "@/lib/auth";
+import { auth, isCoordenadora, orgIdDe } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import CoordenadoraClient from "./CoordenadoraClient";
@@ -8,9 +8,11 @@ export default async function CoordenadoraPage() {
   if (!isCoordenadora(session)) redirect("/");
 
   const ano = new Date().getFullYear();
+  const orgId = orgIdDe(session); // tudo abaixo é restrito a esta organização
 
   const [turmas, formadores, sabados, encontros] = await Promise.all([
     prisma.turma.findMany({
+      where: { orgId },
       orderBy: { nome: "asc" },
       include: {
         formadores: { include: { user: { select: { id: true, name: true, email: true } } } },
@@ -19,15 +21,16 @@ export default async function CoordenadoraPage() {
       },
     }),
     prisma.user.findMany({
-      where: { role: "formador" },
+      where: { role: "formador", orgId },
       select: { id: true, name: true, email: true, turmas: { select: { turmaId: true } } },
       orderBy: { name: "asc" },
     }),
     prisma.calendarioSabado.findMany({
-      where: { data: { gte: new Date(`${ano}-01-01`), lte: new Date(`${ano}-12-31T23:59:59`) } },
+      where: { orgId, data: { gte: new Date(`${ano}-01-01`), lte: new Date(`${ano}-12-31T23:59:59`) } },
       orderBy: { data: "asc" },
     }),
     prisma.encontro.findMany({
+      where: { turma: { orgId } },
       orderBy: { data: "desc" },
       take: 20,
       include: {
@@ -37,8 +40,9 @@ export default async function CoordenadoraPage() {
     }),
   ]);
 
-  // Todos os alunos (coordenadora vê tudo), com a turma, para a aba de detalhes.
+  // Alunos da organização (todas as turmas dela), para a aba de detalhes.
   const alunos = await prisma.crismando.findMany({
+    where: { turma: { orgId } },
     orderBy: [{ turma: { nome: "asc" } }, { nome: "asc" }],
     include: { turma: { select: { nome: true } } },
   });

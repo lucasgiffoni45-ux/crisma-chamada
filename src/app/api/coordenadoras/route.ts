@@ -27,11 +27,15 @@ export async function POST(req: NextRequest) {
   }
   const emailLower = email.toLowerCase();
 
-  // Cria o usuário (se ainda não logou) ou promove um existente a coordenadora.
+  // Cada coordenadora ganha sua própria organização (tenant isolado).
+  const existente = await prisma.user.findUnique({ where: { email: emailLower } });
+  const orgId = existente?.orgId
+    ?? (await prisma.organizacao.create({ data: { nome: `Paróquia de ${nome ?? emailLower}` } })).id;
+
   const user = await prisma.user.upsert({
     where: { email: emailLower },
-    update: { role: "coordenadora", ...(nome ? { name: nome } : {}) },
-    create: { email: emailLower, name: nome ?? null, role: "coordenadora" },
+    update: { role: "coordenadora", orgId, ...(nome ? { name: nome } : {}) },
+    create: { email: emailLower, name: nome ?? null, role: "coordenadora", orgId },
   });
   await registrarLog(session, "cadastrou coordenadora", emailLower);
   return NextResponse.json(user, { status: 201 });

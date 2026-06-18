@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth, isCoordenadora, registrarLog } from "@/lib/auth";
+import { auth, isCoordenadora, registrarLog, orgIdDe } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET: lista formadores e suas turmas (coordenadora).
+// GET: lista os formadores da organização da coordenadora.
 export async function GET() {
   const session = await auth();
   if (!isCoordenadora(session)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   const formadores = await prisma.user.findMany({
-    where: { role: "formador" },
+    where: { role: "formador", orgId: orgIdDe(session) },
     select: {
       id: true,
       name: true,
@@ -21,20 +21,28 @@ export async function GET() {
   return NextResponse.json(formadores);
 }
 
-// POST: cadastra um formador (upsert por e-mail) e opcionalmente já atribui a uma turma.
+// POST: cadastra um formador na organização da coordenadora.
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!isCoordenadora(session)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
+  const orgId = orgIdDe(session);
+  if (!orgId) return NextResponse.json({ error: "Coordenadora sem organização" }, { status: 400 });
   const { nome, email, turmaId } = await req.json();
   if (!email) return NextResponse.json({ error: "E-mail é obrigatório" }, { status: 400 });
   const emailLower = email.toLowerCase();
 
+  // Não permite "roubar" um usuário que já é dono/coordenadora de outra organização.
+  const existente = await prisma.user.findUnique({ where: { email: emailLower } });
+  if (existente && (existente.role === "dono" || existente.role === "coordenadora") && existente.orgId !== orgId) {
+    return NextResponse.json({ error: "Este e-mail já tem outra função no sistema" }, { status: 409 });
+  }
+
   const user = await prisma.user.upsert({
     where: { email: emailLower },
-    update: { role: "formador", ...(nome ? { name: nome } : {}) },
-    create: { email: emailLower, name: nome ?? null, role: "formador" },
+    update: { role: "formador", orgId, ...(nome ? { name: nome } : {}) },
+    create: { email: emailLower, name: nome ?? null, role: "formador", orgId },
   });
 
   if (turmaId) {

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth, isCoordenadora, registrarLog, papelDe } from "@/lib/auth";
+import { auth, isCoordenadora, registrarLog, papelDe, orgIdDe } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET: lista os sábados do calendário (compartilhado). ?ano filtra por ano.
+// GET: calendário da organização do usuário. ?ano filtra por ano.
 export async function GET(req: NextRequest) {
   const session = await auth();
   const papel = papelDe(session);
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   const ano = req.nextUrl.searchParams.get("ano");
-  const where: any = {};
+  const where: any = { orgId: orgIdDe(session) };
   if (ano) {
     where.data = {
       gte: new Date(`${ano}-01-01T00:00:00`),
@@ -27,6 +27,8 @@ export async function POST(req: NextRequest) {
   if (!isCoordenadora(session)) {
     return NextResponse.json({ error: "Apenas a coordenadora planeja o calendário" }, { status: 401 });
   }
+  const orgId = orgIdDe(session);
+  if (!orgId) return NextResponse.json({ error: "Coordenadora sem organização" }, { status: 400 });
   const { ano } = await req.json();
   const year = Number(ano);
   if (!year) return NextResponse.json({ error: "Ano inválido" }, { status: 400 });
@@ -41,13 +43,12 @@ export async function POST(req: NextRequest) {
     datas.push(new Date(d));
   }
 
-  // Limpa os sábados já gerados deste ano (evita duplicatas e remove dados
-  // antigos com horário errado) antes de recriar.
+  // Limpa os sábados já gerados deste ano NESTA organização e recria.
   await prisma.calendarioSabado.deleteMany({
-    where: { data: { gte: new Date(`${year}-01-01T00:00:00Z`), lte: new Date(`${year}-12-31T23:59:59Z`) } },
+    where: { orgId, data: { gte: new Date(`${year}-01-01T00:00:00Z`), lte: new Date(`${year}-12-31T23:59:59Z`) } },
   });
   await prisma.calendarioSabado.createMany({
-    data: datas.map((data) => ({ data, temEncontro: true, recesso: false })),
+    data: datas.map((data) => ({ data, orgId, temEncontro: true, recesso: false })),
     skipDuplicates: true,
   });
   await registrarLog(session, "gerou calendário do ano", String(year));
@@ -63,6 +64,12 @@ export async function PATCH(req: NextRequest) {
   }
   const { id, temEncontro, recesso, horario, mensagem } = await req.json();
   if (!id) return NextResponse.json({ error: "id é obrigatório" }, { status: 400 });
+
+  // Garante que o sábado é da organização da coordenadora.
+  const alvo = await prisma.calendarioSabado.findUnique({ where: { id }, select: { orgId: true } });
+  if (!alvo || alvo.orgId !== orgIdDe(session)) {
+    return NextResponse.json({ error: "Sábado fora da sua organização" }, { status: 403 });
+  }
 
   const data: any = {};
   if (temEncontro !== undefined) data.temEncontro = !!temEncontro;

@@ -27,6 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       (session.user as any).role = role;
+      (session.user as any).orgId = (user as any).orgId ?? null;
       return session;
     },
   },
@@ -50,6 +51,11 @@ export function isFormador(session: any) {
   return papelDe(session) === "formador";
 }
 
+// Organização (tenant) do usuário logado. Dono = null (vê tudo).
+export function orgIdDe(session: any): string | null {
+  return (session?.user?.orgId as string | null) ?? null;
+}
+
 // Verifica se o formador logado está atribuído à turma informada.
 export async function formadorPodeTurma(userId: string, turmaId: string) {
   const vinculo = await prisma.formadorTurma.findUnique({
@@ -58,18 +64,30 @@ export async function formadorPodeTurma(userId: string, turmaId: string) {
   return !!vinculo;
 }
 
-// Coordenadora e dono mandam em qualquer turma; formador só nas atribuídas a ele.
+// Dono manda em tudo; coordenadora só na SUA organização; formador só nas turmas dele.
 export async function podeGerenciarTurma(session: any, turmaId: string) {
   const papel = papelDe(session);
-  if (papel === "coordenadora" || papel === "dono") return true;
+  if (papel === "dono") return true;
+  if (papel === "coordenadora") {
+    const org = orgIdDe(session);
+    if (!org) return false;
+    const turma = await prisma.turma.findUnique({ where: { id: turmaId }, select: { orgId: true } });
+    return !!turma && turma.orgId === org;
+  }
   if (papel === "formador") return formadorPodeTurma(session.user.id, turmaId);
   return false;
 }
 
-// IDs das turmas que o usuário logado pode ver/gerenciar (undefined = todas).
+// IDs das turmas que o usuário pode ver/gerenciar (undefined = todas, só Dono).
 export async function turmasAcessiveis(session: any): Promise<string[] | undefined> {
   const papel = papelDe(session);
-  if (papel === "coordenadora" || papel === "dono") return undefined; // todas
+  if (papel === "dono") return undefined; // vê tudo
+  if (papel === "coordenadora") {
+    const org = orgIdDe(session);
+    if (!org) return [];
+    const turmas = await prisma.turma.findMany({ where: { orgId: org }, select: { id: true } });
+    return turmas.map((t) => t.id);
+  }
   if (papel === "formador") {
     const vinculos = await prisma.formadorTurma.findMany({
       where: { userId: session.user.id },
@@ -90,6 +108,7 @@ export async function registrarLog(
     await prisma.logAtividade.create({
       data: {
         userId: session?.user?.id ?? null,
+        orgId: orgIdDe(session),
         papel: papelDe(session),
         acao,
         alvo: alvo ?? null,

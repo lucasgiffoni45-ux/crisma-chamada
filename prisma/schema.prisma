@@ -43,10 +43,24 @@ model User {
   image         String?
   // Papel: "dono" | "coordenadora" | "formador" | "student"
   role          String    @default("student")
+  // Organização (tenant) à qual coordenadora/formador pertence. Dono e aluno = null.
+  orgId         String?
+  org           Organizacao? @relation(fields: [orgId], references: [id])
   accounts      Account[]
   sessions      Session[]
   turmas        FormadorTurma[]
   attendances   Attendance[]
+}
+
+// Organização = unidade isolada (uma por coordenadora/paróquia). Garante que
+// uma coordenadora não veja os dados de outra.
+model Organizacao {
+  id          String   @id @default(cuid())
+  nome        String
+  createdAt   DateTime @default(now())
+  users       User[]
+  turmas      Turma[]
+  calendarios CalendarioSabado[]
 }
 
 model VerificationToken {
@@ -62,6 +76,8 @@ model Turma {
   id        String          @id @default(cuid())
   nome      String
   createdAt DateTime        @default(now())
+  orgId     String?
+  org       Organizacao?    @relation(fields: [orgId], references: [id])
   formadores FormadorTurma[]
   crismandos Crismando[]
   encontros  Encontro[]
@@ -145,16 +161,21 @@ model AnotacaoAluno {
 
 model CalendarioSabado {
   id         String   @id @default(cuid())
-  data       DateTime @unique // um sábado
+  data       DateTime // um sábado
+  orgId      String?
+  org        Organizacao? @relation(fields: [orgId], references: [id])
   temEncontro Boolean @default(true)
   recesso    Boolean  @default(false)
   horario    String?
   mensagem   String?  // recado da coordenadora, máx 50 caracteres na aplicação
+
+  @@unique([orgId, data])
 }
 
 model LogAtividade {
   id        String   @id @default(cuid())
   userId    String?
+  orgId     String?
   papel     String?
   acao      String
   alvo      String?

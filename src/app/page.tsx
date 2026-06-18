@@ -33,15 +33,22 @@ export default async function Home() {
             <a href="/api/auth/signout" className="mt-4 inline-block text-sm text-stone-400 hover:text-stone-600">Sair</a>
           </div>
         ) : (
-          <Link
-            href="/api/auth/signin"
-            className="mt-6 inline-flex items-center justify-center gap-2 w-full rounded-xl bg-violet-900 px-6 py-3 font-semibold text-white hover:bg-violet-950 transition shadow-sm ring-1 ring-amber-300/20"
-          >
-            Entrar com Google
-          </Link>
+          <>
+            <Link
+              href="/api/auth/signin"
+              className="mt-6 inline-flex items-center justify-center gap-2 w-full rounded-xl bg-violet-900 px-6 py-3 font-semibold text-white hover:bg-violet-950 transition shadow-sm ring-1 ring-amber-300/20"
+            >
+              Entrar com Google
+            </Link>
+            <p className="mt-3 text-xs text-stone-400">
+              Ao entrar, você concorda com a{" "}
+              <Link href="/privacidade" className="text-violet-700 hover:underline">Política de Privacidade</Link>.
+            </p>
+          </>
         )}
       </Card>
       <p className="mt-6 font-display text-sm italic text-stone-400">“Deixai vir a mim as criancinhas” · Mc 10,14</p>
+      <Link href="/privacidade" className="mt-2 text-xs text-stone-400 hover:text-stone-600">Política de Privacidade · LGPD</Link>
     </main>
   );
 }

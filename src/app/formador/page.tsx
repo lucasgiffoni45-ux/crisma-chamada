@@ -1,4 +1,4 @@
-import { auth, isFormador } from "@/lib/auth";
+import { auth, isFormador, orgIdDe } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import FormadorClient from "./FormadorClient";
@@ -9,6 +9,7 @@ export default async function FormadorPage() {
 
   const user = session!.user as { id: string; name?: string | null };
   const userId = user.id;
+  const orgId = orgIdDe(session);
   const vinculos = await prisma.formadorTurma.findMany({
     where: { userId },
     include: {
@@ -67,7 +68,7 @@ export default async function FormadorPage() {
 
   const ano = new Date().getFullYear();
   const sabados = await prisma.calendarioSabado.findMany({
-    where: { data: { gte: new Date(`${ano}-01-01`), lte: new Date(`${ano}-12-31T23:59:59`) } },
+    where: { orgId, data: { gte: new Date(`${ano}-01-01`), lte: new Date(`${ano}-12-31T23:59:59`) } },
     orderBy: { data: "asc" },
   });
 
