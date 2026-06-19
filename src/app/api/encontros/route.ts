@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, podeGerenciarTurma, turmasAcessiveis, registrarLog } from "@/lib/auth";
+import { podeEscrever } from "@/lib/assinatura";
 import { prisma } from "@/lib/prisma";
 
 // GET: lista encontros. ?turmaId filtra; ?ativa=1 retorna só os abertos.
@@ -37,6 +38,9 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+  if (!(await podeEscrever(session))) {
+    return NextResponse.json({ error: "Assinatura inativa. Renove para continuar." }, { status: 402 });
   }
   const { turmaId, data, horario } = await req.json();
   if (!turmaId || !data) {

@@ -27,10 +27,13 @@ export async function POST(req: NextRequest) {
   }
   const emailLower = email.toLowerCase();
 
-  // Cada coordenadora ganha sua própria organização (tenant isolado).
+  // Cada coordenadora ganha sua própria organização (tenant isolado) com 30 dias de teste.
   const existente = await prisma.user.findUnique({ where: { email: emailLower } });
+  const trialFim = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   const orgId = existente?.orgId
-    ?? (await prisma.organizacao.create({ data: { nome: `Paróquia de ${nome ?? emailLower}` } })).id;
+    ?? (await prisma.organizacao.create({
+      data: { nome: `Paróquia de ${nome ?? emailLower}`, assinaturaStatus: "trial", plano: "teste", trialFim },
+    })).id;
 
   const user = await prisma.user.upsert({
     where: { email: emailLower },

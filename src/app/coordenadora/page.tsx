@@ -1,6 +1,7 @@
 import { auth, isCoordenadora, orgIdDe } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { assinaturaDaOrg } from "@/lib/assinatura";
 import CoordenadoraClient from "./CoordenadoraClient";
 
 export default async function CoordenadoraPage() {
@@ -9,6 +10,7 @@ export default async function CoordenadoraPage() {
 
   const ano = new Date().getFullYear();
   const orgId = orgIdDe(session); // tudo abaixo é restrito a esta organização
+  const assinatura = await assinaturaDaOrg(orgId);
 
   const [turmas, formadores, sabados, encontros] = await Promise.all([
     prisma.turma.findMany({
@@ -71,6 +73,7 @@ export default async function CoordenadoraPage() {
       encontros={JSON.parse(JSON.stringify(encontros))}
       estatisticas={estatisticas}
       alunos={JSON.parse(JSON.stringify(alunos))}
+      assinatura={assinatura}
       ano={ano}
     />
   );

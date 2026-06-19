@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, isCoordenadora, registrarLog, orgIdDe } from "@/lib/auth";
+import { podeEscrever } from "@/lib/assinatura";
 import { prisma } from "@/lib/prisma";
 
 // GET: lista os formadores da organização da coordenadora.
@@ -26,6 +27,9 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!isCoordenadora(session)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+  if (!(await podeEscrever(session))) {
+    return NextResponse.json({ error: "Assinatura inativa. Renove para continuar." }, { status: 402 });
   }
   const orgId = orgIdDe(session);
   if (!orgId) return NextResponse.json({ error: "Coordenadora sem organização" }, { status: 400 });

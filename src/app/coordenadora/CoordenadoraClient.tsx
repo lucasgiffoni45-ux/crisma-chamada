@@ -21,8 +21,10 @@ type AlunoDetalhe = {
   turma: { nome: string };
 };
 
-export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais, sabadosIniciais, encontros, estatisticas, alunos, ano }: {
-  turmasIniciais: Turma[]; formadoresIniciais: Formador[]; sabadosIniciais: Sabado[]; encontros: Encontro[]; estatisticas: Estat[]; alunos: AlunoDetalhe[]; ano: number;
+type Assinatura = { ativa: boolean; status: string; diasRestantes: number | null; mensagem: string } | null;
+
+export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais, sabadosIniciais, encontros, estatisticas, alunos, assinatura, ano }: {
+  turmasIniciais: Turma[]; formadoresIniciais: Formador[]; sabadosIniciais: Sabado[]; encontros: Encontro[]; estatisticas: Estat[]; alunos: AlunoDetalhe[]; assinatura: Assinatura; ano: number;
 }) {
   const [aba, setAba] = useState<"geral" | "turmas" | "formadores" | "alunos" | "calendario" | "historico" | "log">("geral");
   const [turmas, setTurmas] = useState(turmasIniciais);
@@ -52,6 +54,13 @@ export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais,
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
       <PageHeader titulo="Painel da Coordenadora" selo="Coordenadora" right={<SairLink />} />
+
+      {assinatura && (!assinatura.ativa || (assinatura.diasRestantes != null && assinatura.diasRestantes <= 7)) && (
+        <a href="/assinatura" className={`mb-4 flex items-center justify-between gap-2 rounded-2xl px-4 py-3 ring-1 ${assinatura.ativa ? "bg-amber-50 ring-amber-200 text-amber-900" : "bg-rose-50 ring-rose-200 text-rose-900"}`}>
+          <span className="text-sm font-medium">{assinatura.ativa ? "⏳ " : "🔒 "}{assinatura.mensagem}{!assinatura.ativa ? " As alterações estão bloqueadas." : ""}</span>
+          <span className="text-xs font-semibold underline whitespace-nowrap">Ver planos →</span>
+        </a>
+      )}
 
       <div className="flex gap-1 mb-6 border-b border-stone-200 overflow-x-auto">
         {(["geral", "turmas", "formadores", "alunos", "calendario", "historico", "log"] as const).map((a) => (

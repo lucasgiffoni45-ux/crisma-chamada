@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, podeGerenciarTurma, turmasAcessiveis, registrarLog } from "@/lib/auth";
+import { podeEscrever } from "@/lib/assinatura";
 import { prisma } from "@/lib/prisma";
 
 // GET: lista alunos. Formador vê só das suas turmas; coordenadora/dono veem todos.
@@ -36,6 +37,9 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+  if (!(await podeEscrever(session))) {
+    return NextResponse.json({ error: "Assinatura inativa. Renove para continuar." }, { status: 402 });
   }
   const b = await req.json();
   const { nome, email, contato, idade, turmaId } = b;

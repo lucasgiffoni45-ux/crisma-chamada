@@ -58,6 +58,13 @@ model Organizacao {
   id          String   @id @default(cuid())
   nome        String
   createdAt   DateTime @default(now())
+  // Assinatura (SaaS)
+  plano               String    @default("teste")  // teste | paroquia | diocese
+  assinaturaStatus    String    @default("trial")  // trial | ativa | atrasada | cancelada
+  trialFim            DateTime?
+  periodoFim          DateTime?
+  asaasCustomerId     String?
+  asaasSubscriptionId String?
   users       User[]
   turmas      Turma[]
   calendarios CalendarioSabado[]

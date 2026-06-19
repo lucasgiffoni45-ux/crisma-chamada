@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BarChart } from "@/components/Charts";
-import { PageHeader, SairLink, SectionTitle, StatCard, Card, Botao, LogTimeline, EmptyState, Avatar } from "@/components/ui";
+import { PageHeader, SairLink, SectionTitle, StatCard, Card, Botao, LogTimeline, EmptyState, Avatar, Badge } from "@/components/ui";
 
 type Coord = { id: string; name: string | null; email: string | null };
 type Turma = {
@@ -27,15 +27,15 @@ export default function DonoClient({
   estatisticas: Estat[];
   nome: string;
 }) {
-  const [aba, setAba] = useState<"visao" | "coordenadoras" | "registro">("visao");
+  const [aba, setAba] = useState<"visao" | "coordenadoras" | "assinaturas" | "registro">("visao");
 
-  const rotulo = (a: typeof aba) => (a === "visao" ? "Visão geral" : a === "coordenadoras" ? "Coordenadoras" : "Registro");
+  const rotulo = (a: typeof aba) => (a === "visao" ? "Visão geral" : a === "coordenadoras" ? "Coordenadoras" : a === "assinaturas" ? "Assinaturas" : "Registro");
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
       <PageHeader titulo="Painel do Dono" selo="Dono" subtitulo={`Olá, ${nome}. Acesso total à plataforma.`} right={<SairLink />} />
 
       <div className="flex gap-1 mb-6 border-b border-stone-200 overflow-x-auto">
-        {(["visao", "coordenadoras", "registro"] as const).map((a) => (
+        {(["visao", "coordenadoras", "assinaturas", "registro"] as const).map((a) => (
           <button key={a} onClick={() => setAba(a)}
             className={`px-3 py-2 text-sm font-medium whitespace-nowrap transition -mb-px border-b-2 ${aba === a ? "border-amber-400 text-violet-900" : "border-transparent text-stone-500 hover:text-stone-700"}`}>
             {rotulo(a)}
@@ -45,7 +45,45 @@ export default function DonoClient({
 
       {aba === "visao" && <AbaVisao stats={stats} turmas={turmas} estatisticas={estatisticas} />}
       {aba === "coordenadoras" && <AbaCoordenadoras inicial={coordenadorasIniciais} />}
+      {aba === "assinaturas" && <AbaAssinaturas />}
       {aba === "registro" && <LogTimeline />}
+    </div>
+  );
+}
+
+function AbaAssinaturas() {
+  const [orgs, setOrgs] = useState<any[] | null>(null);
+  const carregar = () => fetch("/api/assinatura").then((r) => r.json()).then(setOrgs).catch(() => setOrgs([]));
+  if (orgs === null) { carregar(); return <EmptyState titulo="Carregando…" />; }
+
+  async function acao(orgId: string, acao: string, meses?: number) {
+    await fetch("/api/assinatura", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orgId, acao, meses }) });
+    carregar();
+  }
+
+  const cor = (s: string) => s === "ativa" || s === "trial" ? "green" : s === "trial_vencido" || s === "atrasada" ? "amber" : "red";
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-stone-400">Ative ou renove cada paróquia quando o pagamento for confirmado. O teste grátis é de 30 dias.</p>
+      {orgs.length === 0 && <Card><EmptyState icon="⛪" titulo="Nenhuma organização ainda" /></Card>}
+      {orgs.map((o) => (
+        <Card key={o.id} className="p-4">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="font-semibold text-sm text-violet-900">{o.nome}</p>
+              <p className="text-xs text-stone-400">{o.coordenadora} · {o.turmas} turma(s)</p>
+              <div className="mt-1"><Badge tom={cor(o.info.status)}>{o.info.mensagem}</Badge></div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Botao onClick={() => acao(o.id, "ativar", 1)} className="text-xs">+1 mês</Botao>
+            <Botao onClick={() => acao(o.id, "ativar", 12)} className="text-xs">+1 ano</Botao>
+            <button onClick={() => acao(o.id, "teste")} className="text-xs rounded-xl px-3 py-2 font-semibold bg-stone-100 text-stone-700 hover:bg-stone-200">Reiniciar teste</button>
+            <button onClick={() => acao(o.id, "cancelar")} className="text-xs rounded-xl px-3 py-2 font-semibold text-rose-500 hover:bg-rose-50">Cancelar</button>
+          </div>
+        </Card>
+      ))}
     </div>
   );
 }
