@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Só para conferir no navegador que o endpoint está no ar.
+// O Asaas usa POST (abaixo); abrir no navegador (GET) mostra esta mensagem.
+export async function GET() {
+  return NextResponse.json({ ok: true, info: "Webhook do Asaas ativo. Configure esta URL no painel do Asaas (ele usa POST)." });
+}
+
 // Recebe os eventos do Asaas e atualiza a assinatura da organização.
 // Configure no Asaas a URL: https://crisma-chamada.vercel.app/api/webhooks/asaas
 // e (opcional) um token de acesso, salvo em ASAAS_WEBHOOK_TOKEN.
