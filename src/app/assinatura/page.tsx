@@ -2,7 +2,9 @@ import { auth, papelDe, orgIdDe } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { assinaturaDaOrg } from "@/lib/assinatura";
+import { asaasConfigurado } from "@/lib/asaas";
 import { PageHeader, SairLink, Card, Badge } from "@/components/ui";
+import AssinarBotoes from "./AssinarBotoes";
 
 export const metadata = { title: "Assinatura — Crisma Chamada" };
 
@@ -13,6 +15,7 @@ export default async function AssinaturaPage() {
 
   const info = await assinaturaDaOrg(orgIdDe(session));
   const tom = info?.status === "ativa" || info?.status === "trial" ? "green" : info?.status ? "amber" : "stone";
+  const podeAssinarOnline = asaasConfigurado() && papel === "coordenadora";
 
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6">
@@ -53,12 +56,21 @@ export default async function AssinaturaPage() {
       </div>
 
       <Card className="p-5 mt-6">
-        <p className="font-semibold text-stone-700 mb-1">Como assinar</p>
-        <p className="text-sm text-stone-600">
-          Para ativar ou renovar, entre em contato com a coordenação do sistema. Em breve a assinatura poderá ser feita
-          direto pelo app (PIX, boleto ou cartão). Assim que o pagamento for confirmado, seu acesso é liberado.
-        </p>
-        <p className="text-sm text-stone-500 mt-2">Contato: <b>lucas.giffoni45@gmail.com</b></p>
+        <p className="font-semibold text-stone-700 mb-2">Como assinar</p>
+        {podeAssinarOnline ? (
+          <>
+            <p className="text-sm text-stone-600 mb-3">Assine agora e seu acesso é liberado automaticamente após o pagamento.</p>
+            <AssinarBotoes />
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-stone-600">
+              Para ativar ou renovar, entre em contato com a coordenação do sistema. O pagamento online (PIX, boleto ou
+              cartão) será liberado em breve — assim que confirmado, seu acesso é liberado.
+            </p>
+            <p className="text-sm text-stone-500 mt-2">Contato: <b>lucas.giffoni45@gmail.com</b></p>
+          </>
+        )}
       </Card>
 
       <div className="text-center mt-6">
