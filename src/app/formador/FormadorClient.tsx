@@ -361,17 +361,17 @@ function AbaAlunos({ turma, onChange }: { turma: Turma; onChange: (p: Partial<Tu
           <div key={a.id} className="px-4 py-3">
             {editando === a.id ? (
               <div className="flex flex-col gap-2">
-                <input value={a.nome} onChange={(e) => editarCampo(a.id, "nome", e.target.value)} placeholder="Nome" className="border rounded px-2 py-1 text-sm" />
-                <input value={a.email ?? ""} onChange={(e) => editarCampo(a.id, "email", e.target.value)} placeholder="E-mail (adicionar depois)" className="border rounded px-2 py-1 text-sm" />
+                <input value={a.nome} onChange={(e) => editarCampo(a.id, "nome", e.target.value)} placeholder="Nome" className="border border-stone-300 rounded-lg px-2 py-1 text-sm" />
+                <input value={a.email ?? ""} onChange={(e) => editarCampo(a.id, "email", e.target.value)} placeholder="E-mail (adicionar depois)" className="border border-stone-300 rounded-lg px-2 py-1 text-sm" />
                 <div className="flex gap-2">
-                  <input value={a.contato ?? ""} placeholder="WhatsApp" onChange={(e) => editarCampo(a.id, "contato", e.target.value)} className="border rounded px-2 py-1 text-sm flex-1" />
-                  <input value={a.idade ?? ""} type="number" placeholder="Idade" onChange={(e) => editarCampo(a.id, "idade", e.target.value)} className="border rounded px-2 py-1 text-sm w-20" />
+                  <input value={a.contato ?? ""} placeholder="WhatsApp" onChange={(e) => editarCampo(a.id, "contato", e.target.value)} className="border border-stone-300 rounded-lg px-2 py-1 text-sm flex-1" />
+                  <input value={a.idade ?? ""} type="number" placeholder="Idade" onChange={(e) => editarCampo(a.id, "idade", e.target.value)} className="border border-stone-300 rounded-lg px-2 py-1 text-sm w-20" />
                 </div>
-                <input value={a.dataNascimento ?? ""} placeholder="Data de nascimento" onChange={(e) => editarCampo(a.id, "dataNascimento", e.target.value)} className="border rounded px-2 py-1 text-sm" />
-                <input value={a.sacramentos ?? ""} placeholder="Sacramentos" onChange={(e) => editarCampo(a.id, "sacramentos", e.target.value)} className="border rounded px-2 py-1 text-sm" />
+                <input value={a.dataNascimento ?? ""} placeholder="Data de nascimento" onChange={(e) => editarCampo(a.id, "dataNascimento", e.target.value)} className="border border-stone-300 rounded-lg px-2 py-1 text-sm" />
+                <input value={a.sacramentos ?? ""} placeholder="Sacramentos" onChange={(e) => editarCampo(a.id, "sacramentos", e.target.value)} className="border border-stone-300 rounded-lg px-2 py-1 text-sm" />
                 <div className="flex gap-2">
-                  <input value={a.alergias ?? ""} placeholder="Alergias" onChange={(e) => editarCampo(a.id, "alergias", e.target.value)} className="border rounded px-2 py-1 text-sm flex-1" />
-                  <input value={a.necessidades ?? ""} placeholder="Necessidades" onChange={(e) => editarCampo(a.id, "necessidades", e.target.value)} className="border rounded px-2 py-1 text-sm flex-1" />
+                  <input value={a.alergias ?? ""} placeholder="Alergias" onChange={(e) => editarCampo(a.id, "alergias", e.target.value)} className="border border-stone-300 rounded-lg px-2 py-1 text-sm flex-1" />
+                  <input value={a.necessidades ?? ""} placeholder="Necessidades" onChange={(e) => editarCampo(a.id, "necessidades", e.target.value)} className="border border-stone-300 rounded-lg px-2 py-1 text-sm flex-1" />
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => salvarEdicao(a)} className="text-xs text-green-600 font-medium">Salvar</button>
@@ -434,7 +434,7 @@ function AbaGraficos({ turma }: { turma: Turma }) {
 
 function CartaoNum({ valor, rotulo }: { valor: string; rotulo: string }) {
   return (
-    <div className="bg-white rounded-xl shadow p-3 text-center">
+    <div className="bg-white rounded-2xl shadow-sm ring-1 ring-stone-200/70 p-3 text-center">
       <p className="text-2xl font-bold text-violet-800">{valor}</p>
       <p className="text-xs text-stone-500 mt-0.5">{rotulo}</p>
     </div>
@@ -444,22 +444,22 @@ function CartaoNum({ valor, rotulo }: { valor: string; rotulo: string }) {
 // ---------- Aba Calendário (somente leitura) ----------
 function AbaCalendario({ sabados }: { sabados: Sabado[] }) {
   if (sabados.length === 0) {
-    return <p className="text-sm text-gray-400 text-center">A coordenadora ainda não publicou o calendário do ano.</p>;
+    return <Card><EmptyState icon="🗓️" titulo="Calendário ainda não publicado" texto="A coordenadora ainda não definiu os sábados do ano." /></Card>;
   }
   return (
-    <div className="bg-white rounded-xl shadow divide-y">
+    <Card className="divide-y divide-stone-100">
       {sabados.map((s) => (
-        <div key={s.id} className="px-4 py-2 flex items-center justify-between text-sm">
+        <div key={s.id} className="px-4 py-2.5 flex items-center justify-between text-sm">
           <div>
-            <span className="font-medium">{new Date(s.data).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short", timeZone: "UTC" })}</span>
-            {s.mensagem && <span className="ml-2 text-violet-500">“{s.mensagem}”</span>}
+            <span className="font-medium text-stone-700">{new Date(s.data).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short", timeZone: "UTC" })}</span>
+            {s.mensagem && <span className="ml-2 text-violet-600">“{s.mensagem}”</span>}
           </div>
-          <span className={s.recesso || !s.temEncontro ? "text-gray-400" : "text-green-600"}>
-            {s.recesso ? "Recesso" : s.temEncontro ? `Encontro${s.horario ? " " + s.horario : ""}` : "Sem encontro"}
-          </span>
+          {s.recesso || !s.temEncontro
+            ? <Badge tom="stone">{s.recesso ? "Recesso" : "Sem encontro"}</Badge>
+            : <Badge tom="green">Encontro{s.horario ? ` · ${s.horario}` : ""}</Badge>}
         </div>
       ))}
-    </div>
+    </Card>
   );
 }
 

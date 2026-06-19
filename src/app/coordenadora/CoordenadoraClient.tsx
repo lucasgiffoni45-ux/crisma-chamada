@@ -92,7 +92,7 @@ function AbaGeral({ estatisticas }: { estatisticas: Estat[] }) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <DonutTaxa titulo="Frequência geral" percentual={freqGeral} />
-        <div className="bg-white rounded-xl shadow p-4 flex flex-col justify-center gap-2">
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-stone-200/70 p-4 flex flex-col justify-center gap-2">
           <Linha rotulo="Alunos" valor={totAlunos} />
           <Linha rotulo="Presenças" valor={totPresencas} />
           <Linha rotulo="Faltas" valor={totFaltas} />
@@ -138,14 +138,14 @@ function AbaTurmas({ turmas, setTurmas, formadores, atribuir }: {
   return (
     <div className="space-y-4">
       <form onSubmit={criar} className="flex gap-2 bg-white p-4 rounded-xl shadow">
-        <input value={nome} onChange={(e) => setNome(e.target.value)} required placeholder="Nome da turma (ex: Turma A)" className="border rounded-lg px-3 py-2 text-sm flex-1" />
+        <input value={nome} onChange={(e) => setNome(e.target.value)} required placeholder="Nome da turma (ex: Turma A)" className="border border-stone-300 rounded-xl px-3 py-2 text-sm flex-1" />
         <button className="rounded-lg bg-violet-700 px-4 py-2 font-semibold text-white text-sm hover:bg-violet-800">Criar</button>
       </form>
-      {turmas.length === 0 && <p className="p-4 text-sm text-stone-400 text-center bg-white rounded-xl shadow">Nenhuma turma.</p>}
+      {turmas.length === 0 && <p className="p-4 text-sm text-stone-400 text-center bg-white rounded-2xl shadow-sm ring-1 ring-stone-200/70">Nenhuma turma.</p>}
       {turmas.map((t) => {
         const naoAtribuidos = formadores.filter((f) => !f.turmas.some((x) => x.turmaId === t.id));
         return (
-          <div key={t.id} className="bg-white rounded-xl shadow p-4 space-y-3">
+          <div key={t.id} className="bg-white rounded-2xl shadow-sm ring-1 ring-stone-200/70 p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-semibold text-sm">{t.nome}</p>
@@ -169,7 +169,7 @@ function AbaTurmas({ turmas, setTurmas, formadores, atribuir }: {
 
             {naoAtribuidos.length > 0 && (
               <select defaultValue="" onChange={(e) => { if (e.target.value) { atribuir(e.target.value, t.id, true); e.target.value = ""; } }}
-                className="border rounded-lg px-3 py-2 text-sm w-full text-stone-600">
+                className="border border-stone-300 rounded-xl px-3 py-2 text-sm w-full text-stone-600">
                 <option value="">+ Adicionar formador à turma…</option>
                 {naoAtribuidos.map((f) => <option key={f.id} value={f.id}>{f.name ?? f.email}</option>)}
               </select>
@@ -209,13 +209,13 @@ function AbaFormadores({ formadores, setFormadores, turmas }: { formadores: Form
     <div className="space-y-4">
       <form onSubmit={cadastrar} className="flex flex-col gap-2 bg-white p-4 rounded-xl shadow">
         <h2 className="font-semibold text-stone-700 text-sm">Novo formador</h2>
-        <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome" className="border rounded-lg px-3 py-2 text-sm" />
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required placeholder="E-mail (conta Google)" className="border rounded-lg px-3 py-2 text-sm" />
+        <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome" className="border border-stone-300 rounded-xl px-3 py-2 text-sm" />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required placeholder="E-mail (conta Google)" className="border border-stone-300 rounded-xl px-3 py-2 text-sm" />
         {erro && <p className="text-red-500 text-sm">{erro}</p>}
         <button className="rounded-lg bg-violet-700 px-4 py-2 font-semibold text-white text-sm hover:bg-violet-800">Cadastrar</button>
       </form>
       <p className="text-xs text-stone-400 px-1">A atribuição às turmas é feita na aba <b>Turmas</b>.</p>
-      <div className="bg-white rounded-xl shadow divide-y">
+      <div className="bg-white rounded-2xl shadow-sm ring-1 ring-stone-200/70 divide-y">
         {formadores.length === 0 && <p className="p-4 text-sm text-stone-400 text-center">Nenhum formador.</p>}
         {formadores.map((f) => (
           <div key={f.id} className="px-4 py-3 flex items-center justify-between">
@@ -314,14 +314,14 @@ function AbaCalendario({ sabados, setSabados, ano }: { sabados: Sabado[]; setSab
   return (
     <div className="space-y-4">
       {sabados.length === 0 ? (
-        <div className="bg-white rounded-xl shadow p-6 text-center">
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-stone-200/70 p-6 text-center">
           <p className="text-stone-500 mb-3">Calendário de {ano} ainda não gerado.</p>
           <button onClick={gerar} disabled={gerando} className="rounded-lg bg-violet-700 px-6 py-2 font-semibold text-white hover:bg-violet-800 disabled:opacity-50">
             {gerando ? "Gerando..." : `Gerar sábados de ${ano}`}
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow divide-y">
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-stone-200/70 divide-y">
           {sabados.map((s) => (
             <div key={s.id} className="px-4 py-3 space-y-2">
               <div className="flex items-center justify-between">
@@ -335,9 +335,9 @@ function AbaCalendario({ sabados, setSabados, ano }: { sabados: Sabado[]; setSab
               </div>
               <div className="flex gap-2">
                 <input type="time" defaultValue={s.horario ?? ""} onBlur={(e) => atualizar(s, { horario: e.target.value })}
-                  className="border rounded px-2 py-1 text-xs w-28" />
+                  className="border border-stone-300 rounded-lg px-2 py-1 text-xs w-28" />
                 <input maxLength={50} defaultValue={s.mensagem ?? ""} placeholder="Recado (máx. 50)" onBlur={(e) => atualizar(s, { mensagem: e.target.value })}
-                  className="border rounded px-2 py-1 text-xs flex-1" />
+                  className="border border-stone-300 rounded-lg px-2 py-1 text-xs flex-1" />
               </div>
             </div>
           ))}

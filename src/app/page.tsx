@@ -48,7 +48,11 @@ export default async function Home() {
         )}
       </Card>
       <p className="mt-6 font-display text-sm italic text-stone-400">“Deixai vir a mim as criancinhas” · Mc 10,14</p>
-      <Link href="/privacidade" className="mt-2 text-xs text-stone-400 hover:text-stone-600">Política de Privacidade · LGPD</Link>
+      <div className="mt-2 flex gap-3 text-xs text-stone-400">
+        <Link href="/privacidade" className="hover:text-stone-600">Privacidade · LGPD</Link>
+        <span>·</span>
+        <Link href="/termos" className="hover:text-stone-600">Termos de Uso</Link>
+      </div>
     </main>
   );
 }
