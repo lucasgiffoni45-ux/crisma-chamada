@@ -170,6 +170,17 @@ export function LogTimeline() {
   );
 }
 
+// Rodapé com links legais (LGPD).
+export function Rodape() {
+  return (
+    <footer className="mt-10 mb-6 flex items-center justify-center gap-3 text-xs text-stone-400">
+      <a href="/privacidade" className="hover:text-stone-600">Privacidade</a>
+      <span>·</span>
+      <a href="/termos" className="hover:text-stone-600">Termos de Uso</a>
+    </footer>
+  );
+}
+
 // Botão padrão.
 export function Botao({ children, onClick, type = "button", variante = "primario", className = "", disabled }: {
   children: ReactNode; onClick?: () => void; type?: "button" | "submit"; variante?: "primario" | "perigo" | "suave"; className?: string; disabled?: boolean;

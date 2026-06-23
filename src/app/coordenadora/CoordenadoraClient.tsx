@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BarChart, DonutTaxa } from "@/components/Charts";
-import { PageHeader, SairLink, SectionTitle, Card, Botao, Badge, Avatar, EmptyState, LogTimeline } from "@/components/ui";
+import { PageHeader, SairLink, SectionTitle, Card, Botao, Badge, Avatar, EmptyState, LogTimeline, Rodape } from "@/components/ui";
 
 type Formador = { id: string; name: string | null; email: string | null; turmas: { turmaId: string }[] };
 type Turma = {
@@ -78,6 +78,7 @@ export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais,
       {aba === "calendario" && <AbaCalendario sabados={sabados} setSabados={setSabados} ano={ano} />}
       {aba === "historico" && <AbaHistorico encontros={encontros} />}
       {aba === "log" && <LogTimeline />}
+      <Rodape />
     </div>
   );
 }

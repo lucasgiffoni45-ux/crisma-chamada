@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BarChart } from "@/components/Charts";
-import { PageHeader, SairLink, SectionTitle, StatCard, Card, Botao, LogTimeline, EmptyState, Avatar, Badge } from "@/components/ui";
+import { PageHeader, SairLink, SectionTitle, StatCard, Card, Botao, LogTimeline, EmptyState, Avatar, Badge, Rodape } from "@/components/ui";
 
 type Coord = { id: string; name: string | null; email: string | null };
 type Turma = {
@@ -47,6 +47,7 @@ export default function DonoClient({
       {aba === "coordenadoras" && <AbaCoordenadoras inicial={coordenadorasIniciais} />}
       {aba === "assinaturas" && <AbaAssinaturas />}
       {aba === "registro" && <LogTimeline />}
+      <Rodape />
     </div>
   );
 }

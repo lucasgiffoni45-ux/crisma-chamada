@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { BarChart } from "@/components/Charts";
-import { PageHeader, SairLink, SectionTitle, StatCard, Card, Botao, Badge, Avatar, EmptyState } from "@/components/ui";
+import { PageHeader, SairLink, SectionTitle, StatCard, Card, Botao, Badge, Avatar, EmptyState, Rodape } from "@/components/ui";
 
 type Aluno = {
   id: string; nome: string; email: string | null; contato: string | null; idade: number | null;
@@ -94,6 +94,7 @@ export default function FormadorClient({ turmasIniciais, sabados, nome }: {
       {aba === "alunos" && <AbaAlunos turma={turma} onChange={(p) => atualizarTurma(turma.id, p)} />}
       {aba === "graficos" && <AbaGraficos turma={turma} />}
       {aba === "calendario" && <AbaCalendario sabados={sabados} />}
+      <Rodape />
     </div>
   );
 }
