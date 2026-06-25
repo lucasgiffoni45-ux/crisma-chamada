@@ -68,9 +68,35 @@ model Organizacao {
   periodoFim          DateTime?
   asaasCustomerId     String?
   asaasSubscriptionId String?
+  // Inscrição pública (formulário aberto aos pais)
+  inscricaoAberta     Boolean   @default(false)
+  inscricaoToken      String?   @unique
   users       User[]
   turmas      Turma[]
   calendarios CalendarioSabado[]
+  inscricoes  Inscricao[]
+}
+
+// Pré-inscrição feita pelos pais no formulário público; a coordenadora aprova
+// (vira Crismando) ou recusa.
+model Inscricao {
+  id             String   @id @default(cuid())
+  orgId          String
+  org            Organizacao @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  nome           String
+  dataNascimento String?
+  contato        String?
+  email          String?
+  sacramentos    String?
+  alergias       String?
+  necessidades   String?
+  nomePai        String?
+  nomeMae        String?
+  endereco       String?
+  estadoCivil    String?
+  serieEscolar   String?
+  status         String   @default("pendente") // pendente | aprovada | recusada
+  createdAt      DateTime @default(now())
 }
 
 model VerificationToken {

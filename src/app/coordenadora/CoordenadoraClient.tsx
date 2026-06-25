@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BarChart, DonutTaxa } from "@/components/Charts";
 import { PageHeader, SairLink, SectionTitle, Card, Botao, Badge, Avatar, EmptyState, LogTimeline, Rodape } from "@/components/ui";
 
@@ -22,11 +22,12 @@ type AlunoDetalhe = {
 };
 
 type Assinatura = { ativa: boolean; status: string; diasRestantes: number | null; mensagem: string } | null;
+type EstadoInscricao = { aberta: boolean; token: string | null };
 
-export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais, sabadosIniciais, encontros, estatisticas, alunos, assinatura, ano }: {
-  turmasIniciais: Turma[]; formadoresIniciais: Formador[]; sabadosIniciais: Sabado[]; encontros: Encontro[]; estatisticas: Estat[]; alunos: AlunoDetalhe[]; assinatura: Assinatura; ano: number;
+export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais, sabadosIniciais, encontros, estatisticas, alunos, assinatura, inscricao, ano }: {
+  turmasIniciais: Turma[]; formadoresIniciais: Formador[]; sabadosIniciais: Sabado[]; encontros: Encontro[]; estatisticas: Estat[]; alunos: AlunoDetalhe[]; assinatura: Assinatura; inscricao: EstadoInscricao; ano: number;
 }) {
-  const [aba, setAba] = useState<"geral" | "turmas" | "formadores" | "alunos" | "calendario" | "historico" | "log">("geral");
+  const [aba, setAba] = useState<"geral" | "turmas" | "formadores" | "alunos" | "inscricoes" | "calendario" | "historico" | "log">("geral");
   const [turmas, setTurmas] = useState(turmasIniciais);
   const [formadores, setFormadores] = useState(formadoresIniciais);
   const [sabados, setSabados] = useState(sabadosIniciais);
@@ -50,7 +51,7 @@ export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais,
     }));
   }
 
-  const rotulo = (a: typeof aba) => (a === "geral" ? "Visão geral" : a === "turmas" ? "Turmas" : a === "formadores" ? "Formadores" : a === "alunos" ? "Alunos" : a === "calendario" ? "Calendário" : a === "historico" ? "Histórico" : "Registro");
+  const rotulo = (a: typeof aba) => (a === "geral" ? "Visão geral" : a === "turmas" ? "Turmas" : a === "formadores" ? "Formadores" : a === "alunos" ? "Alunos" : a === "inscricoes" ? "Inscrições" : a === "calendario" ? "Calendário" : a === "historico" ? "Histórico" : "Registro");
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
       <PageHeader titulo="Painel da Coordenadora" selo="Coordenadora" right={<SairLink />} />
@@ -63,7 +64,7 @@ export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais,
       )}
 
       <div className="flex gap-1 mb-6 border-b border-stone-200 overflow-x-auto">
-        {(["geral", "turmas", "formadores", "alunos", "calendario", "historico", "log"] as const).map((a) => (
+        {(["geral", "turmas", "formadores", "alunos", "inscricoes", "calendario", "historico", "log"] as const).map((a) => (
           <button key={a} onClick={() => setAba(a)}
             className={`px-3 py-2 text-sm font-medium whitespace-nowrap transition -mb-px border-b-2 ${aba === a ? "border-amber-400 text-violet-900" : "border-transparent text-stone-500 hover:text-stone-700"}`}>
             {rotulo(a)}
@@ -74,6 +75,7 @@ export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais,
       {aba === "geral" && <AbaGeral estatisticas={estatisticas} />}
       {aba === "turmas" && <AbaTurmas turmas={turmas} setTurmas={setTurmas} formadores={formadores} atribuir={atribuir} />}
       {aba === "formadores" && <AbaFormadores formadores={formadores} setFormadores={setFormadores} turmas={turmas} />}
+      {aba === "inscricoes" && <AbaInscricoes inicial={inscricao} turmas={turmas} />}
       {aba === "alunos" && <AbaAlunos alunos={alunos} />}
       {aba === "calendario" && <AbaCalendario sabados={sabados} setSabados={setSabados} ano={ano} />}
       {aba === "historico" && <AbaHistorico encontros={encontros} />}
@@ -293,6 +295,89 @@ function AbaAlunos({ alunos }: { alunos: AlunoDetalhe[] }) {
 function Campo({ r, v }: { r: string; v: string | null }) {
   if (!v) return null;
   return <p><span className="text-stone-400">{r}:</span> <span className="text-stone-700">{v}</span></p>;
+}
+
+function AbaInscricoes({ inicial, turmas }: { inicial: EstadoInscricao; turmas: Turma[] }) {
+  const [aberta, setAberta] = useState(inicial.aberta);
+  const [token, setToken] = useState(inicial.token);
+  const [pendentes, setPendentes] = useState<any[] | null>(null);
+  const [turmaSel, setTurmaSel] = useState<Record<string, string>>({});
+  const [erro, setErro] = useState("");
+  const [copiado, setCopiado] = useState(false);
+
+  useEffect(() => { fetch("/api/inscricao").then((r) => r.json()).then(setPendentes).catch(() => setPendentes([])); }, []);
+
+  const link = token ? `${typeof window !== "undefined" ? window.location.origin : ""}/inscricao/${token}` : "";
+
+  async function alternar() {
+    const res = await fetch("/api/inscricao", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ abrir: !aberta }) });
+    const d = await res.json();
+    setAberta(d.inscricaoAberta); setToken(d.inscricaoToken);
+  }
+
+  async function decidir(id: string, acao: "aprovar" | "recusar") {
+    setErro("");
+    const turmaId = turmaSel[id];
+    if (acao === "aprovar" && !turmaId) { setErro("Escolha a turma antes de aprovar."); return; }
+    const res = await fetch(`/api/inscricao/${id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ acao, turmaId }) });
+    if (res.ok) setPendentes((p) => (p ?? []).filter((x) => x.id !== id));
+    else { const d = await res.json(); setErro(d.error ?? "Erro"); }
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-semibold text-stone-700 text-sm">Formulário de inscrição</p>
+            <p className="text-xs text-stone-400">{aberta ? "Aberto — os pais já podem se inscrever." : "Fechado — ninguém consegue se inscrever."}</p>
+          </div>
+          <Botao variante={aberta ? "perigo" : "primario"} onClick={alternar}>{aberta ? "Fechar inscrições" : "Abrir inscrições"}</Botao>
+        </div>
+        {aberta && link && (
+          <div className="mt-3 flex items-center gap-2">
+            <input readOnly value={link} className="border border-stone-300 rounded-xl px-3 py-2 text-xs flex-1 bg-stone-50" />
+            <button onClick={() => { navigator.clipboard?.writeText(link); setCopiado(true); setTimeout(() => setCopiado(false), 2000); }}
+              className="text-xs font-semibold rounded-xl px-3 py-2 bg-stone-100 text-stone-700 hover:bg-stone-200">{copiado ? "✓ copiado" : "Copiar link"}</button>
+            <a href={`https://wa.me/?text=${encodeURIComponent("Inscrição da catequese: " + link)}`} target="_blank" rel="noopener noreferrer"
+              className="text-xs font-semibold rounded-xl px-3 py-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-200">WhatsApp</a>
+          </div>
+        )}
+      </Card>
+
+      <SectionTitle>Inscrições pendentes {pendentes ? <span className="text-stone-400 font-normal text-base">· {pendentes.length}</span> : null}</SectionTitle>
+      {erro && <p className="text-rose-500 text-sm">{erro}</p>}
+      {pendentes === null && <EmptyState titulo="Carregando…" />}
+      {pendentes && pendentes.length === 0 && <Card><EmptyState icon="📝" titulo="Nenhuma inscrição pendente" texto="As inscrições enviadas pelo formulário aparecerão aqui para você aprovar." /></Card>}
+      {pendentes && pendentes.map((i) => (
+        <Card key={i.id} className="p-4">
+          <div className="flex items-start gap-3">
+            <Avatar nome={i.nome} size={36} />
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-stone-800">{i.nome}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 text-xs text-stone-500 mt-1">
+                <Campo r="E-mail" v={i.email} />
+                <Campo r="Contato" v={i.contato} />
+                <Campo r="Nascimento" v={i.dataNascimento} />
+                <Campo r="Sacramentos" v={i.sacramentos} />
+                <Campo r="Alergias" v={i.alergias} />
+                <Campo r="Mãe" v={i.nomeMae} />
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <select value={turmaSel[i.id] ?? ""} onChange={(e) => setTurmaSel((p) => ({ ...p, [i.id]: e.target.value }))}
+              className="border border-stone-300 rounded-lg px-2 py-1.5 text-xs">
+              <option value="">Escolher turma…</option>
+              {turmas.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+            </select>
+            <button onClick={() => decidir(i.id, "aprovar")} className="text-xs font-semibold rounded-xl px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700">Aprovar</button>
+            <button onClick={() => decidir(i.id, "recusar")} className="text-xs font-semibold rounded-xl px-3 py-1.5 text-rose-500 hover:bg-rose-50">Recusar</button>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
 }
 
 function AbaCalendario({ sabados, setSabados, ano }: { sabados: Sabado[]; setSabados: (s: Sabado[]) => void; ano: number }) {

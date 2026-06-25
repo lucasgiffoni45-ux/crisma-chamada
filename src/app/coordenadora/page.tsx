@@ -65,6 +65,13 @@ export default async function CoordenadoraPage() {
     id: t.id, nome: t.nome, formadores: t.formadores, _count: t._count,
   }));
 
+  // Estado das inscrições públicas da organização.
+  const org = await prisma.organizacao.findUnique({
+    where: { id: orgId ?? "" },
+    select: { inscricaoAberta: true, inscricaoToken: true, _count: { select: { inscricoes: true } } },
+  });
+  const inscricao = { aberta: org?.inscricaoAberta ?? false, token: org?.inscricaoToken ?? null };
+
   return (
     <CoordenadoraClient
       turmasIniciais={JSON.parse(JSON.stringify(turmasLeves))}
@@ -74,6 +81,7 @@ export default async function CoordenadoraPage() {
       estatisticas={estatisticas}
       alunos={JSON.parse(JSON.stringify(alunos))}
       assinatura={assinatura}
+      inscricao={inscricao}
       ano={ano}
     />
   );
