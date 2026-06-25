@@ -20,6 +20,7 @@ export async function GET() {
     id: o.id,
     nome: o.nome,
     plano: o.plano,
+    segmento: o.segmento,
     coordenadora: o.users[0]?.name ?? o.users[0]?.email ?? "—",
     turmas: o._count.turmas,
     info: avaliarAssinatura(o),
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
   if (!isDono(session)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
-  const { orgId, acao, meses } = await req.json();
+  const { orgId, acao, meses, valor } = await req.json();
   if (!orgId || !acao) return NextResponse.json({ error: "orgId e ação são obrigatórios" }, { status: 400 });
 
   const data: any = {};
@@ -54,6 +55,10 @@ export async function POST(req: NextRequest) {
   } else if (acao === "teste") {
     data.assinaturaStatus = "trial";
     data.trialFim = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  } else if (acao === "segmento") {
+    const validos = ["catequese", "escola", "musica", "artes-marciais"];
+    if (!validos.includes(valor)) return NextResponse.json({ error: "Segmento inválido" }, { status: 400 });
+    data.segmento = valor;
   } else {
     return NextResponse.json({ error: "Ação inválida" }, { status: 400 });
   }

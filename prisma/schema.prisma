@@ -58,6 +58,9 @@ model Organizacao {
   id          String   @id @default(cuid())
   nome        String
   createdAt   DateTime @default(now())
+  // Segmento de mercado — define o vocabulário do app (ver src/lib/segmentos.ts).
+  // "catequese" | "escola" | "musica" | "artes-marciais" | ...
+  segmento    String   @default("catequese")
   // Assinatura (SaaS)
   plano               String    @default("teste")  // teste | paroquia | diocese
   assinaturaStatus    String    @default("trial")  // trial | ativa | atrasada | cancelada

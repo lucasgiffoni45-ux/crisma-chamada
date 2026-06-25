@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { BarChart } from "@/components/Charts";
 import { PageHeader, SairLink, SectionTitle, StatCard, Card, Botao, LogTimeline, EmptyState, Avatar, Badge, Rodape } from "@/components/ui";
+import { SEGMENTOS_LISTA } from "@/lib/segmentos";
 
 type Coord = { id: string; name: string | null; email: string | null };
 type Turma = {
@@ -57,8 +58,8 @@ function AbaAssinaturas() {
   const carregar = () => fetch("/api/assinatura").then((r) => r.json()).then(setOrgs).catch(() => setOrgs([]));
   if (orgs === null) { carregar(); return <EmptyState titulo="Carregando…" />; }
 
-  async function acao(orgId: string, acao: string, meses?: number) {
-    await fetch("/api/assinatura", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orgId, acao, meses }) });
+  async function acao(orgId: string, acaoNome: string, extra?: { meses?: number; valor?: string }) {
+    await fetch("/api/assinatura", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orgId, acao: acaoNome, ...extra }) });
     carregar();
   }
 
@@ -78,10 +79,17 @@ function AbaAssinaturas() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
-            <Botao onClick={() => acao(o.id, "ativar", 1)} className="text-xs">+1 mês</Botao>
-            <Botao onClick={() => acao(o.id, "ativar", 12)} className="text-xs">+1 ano</Botao>
+            <Botao onClick={() => acao(o.id, "ativar", { meses: 1 })} className="text-xs">+1 mês</Botao>
+            <Botao onClick={() => acao(o.id, "ativar", { meses: 12 })} className="text-xs">+1 ano</Botao>
             <button onClick={() => acao(o.id, "teste")} className="text-xs rounded-xl px-3 py-2 font-semibold bg-stone-100 text-stone-700 hover:bg-stone-200">Reiniciar teste</button>
             <button onClick={() => acao(o.id, "cancelar")} className="text-xs rounded-xl px-3 py-2 font-semibold text-rose-500 hover:bg-rose-50">Cancelar</button>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-xs text-stone-400">Segmento:</span>
+            <select value={o.segmento ?? "catequese"} onChange={(e) => acao(o.id, "segmento", { valor: e.target.value })}
+              className="border border-stone-300 rounded-lg px-2 py-1 text-xs">
+              {SEGMENTOS_LISTA.map((s) => <option key={s.valor} value={s.valor}>{s.nome}</option>)}
+            </select>
           </div>
         </Card>
       ))}
