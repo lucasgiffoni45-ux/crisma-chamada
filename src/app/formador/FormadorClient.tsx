@@ -108,6 +108,7 @@ function AbaChamada({ turma, onChange }: { turma: Turma; onChange: (p: Partial<T
   const [tema, setTema] = useState(encontro?.tema ?? "");
   const [licao, setLicao] = useState(encontro?.licaoDeCasa ?? "");
   const [anotacoes, setAnotacoes] = useState<Record<string, string>>({});
+  const [notasSalvas, setNotasSalvas] = useState(false);
 
   const appUrl = typeof window !== "undefined" ? window.location.origin : "";
   const presencaUrl = encontro ? `${appUrl}/presenca/${encontro.token}` : "";
@@ -156,7 +157,8 @@ function AbaChamada({ turma, onChange }: { turma: Turma; onChange: (p: Partial<T
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tema, licaoDeCasa: licao }),
     });
-    alert("Anotações do encontro salvas.");
+    setNotasSalvas(true);
+    setTimeout(() => setNotasSalvas(false), 2500);
   }
 
   async function salvarAnotacaoAluno(crismandoId: string, texto: string) {
@@ -228,7 +230,10 @@ function AbaChamada({ turma, onChange }: { turma: Turma; onChange: (p: Partial<T
           className="border border-stone-300 rounded-xl px-3 py-2 text-sm w-full" />
         <input value={licao} onChange={(e) => setLicao(e.target.value)} placeholder="Lição de casa"
           className="border border-stone-300 rounded-xl px-3 py-2 text-sm w-full" />
-        <Botao onClick={salvarNotas} className="text-sm">Salvar anotações</Botao>
+        <div className="flex items-center gap-2">
+          <Botao onClick={salvarNotas} className="text-sm">Salvar anotações</Botao>
+          {notasSalvas && <span className="text-sm text-emerald-600 font-medium">✓ salvo</span>}
+        </div>
       </Card>
 
       {/* Tabela de presença + anotação por aluno */}
