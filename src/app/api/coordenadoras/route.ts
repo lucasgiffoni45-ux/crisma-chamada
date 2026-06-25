@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, isDono, registrarLog } from "@/lib/auth";
+import { emailValido } from "@/lib/validar";
 import { prisma } from "@/lib/prisma";
 
 // Apenas o Dono cadastra/remove coordenadoras.
@@ -22,10 +23,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   const { nome, email } = await req.json();
-  if (!email) {
-    return NextResponse.json({ error: "E-mail é obrigatório" }, { status: 400 });
+  if (!email || !emailValido(email)) {
+    return NextResponse.json({ error: "Informe um e-mail válido" }, { status: 400 });
   }
-  const emailLower = email.toLowerCase();
+  const emailLower = email.toLowerCase().trim();
 
   // Cada coordenadora ganha sua própria organização (tenant isolado) com 30 dias de teste.
   const existente = await prisma.user.findUnique({ where: { email: emailLower } });

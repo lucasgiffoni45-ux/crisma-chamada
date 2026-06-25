@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, podeGerenciarTurma, turmasAcessiveis, registrarLog } from "@/lib/auth";
 import { podeEscrever } from "@/lib/assinatura";
+import { emailValido } from "@/lib/validar";
 import { prisma } from "@/lib/prisma";
 
 // GET: lista alunos. Formador vê só das suas turmas; coordenadora/dono veem todos.
@@ -45,6 +46,9 @@ export async function POST(req: NextRequest) {
   const { nome, email, contato, idade, turmaId } = b;
   if (!nome || !turmaId) {
     return NextResponse.json({ error: "Nome e turma são obrigatórios" }, { status: 400 });
+  }
+  if (email && !emailValido(email)) {
+    return NextResponse.json({ error: "E-mail inválido" }, { status: 400 });
   }
   if (!(await podeGerenciarTurma(session, turmaId))) {
     return NextResponse.json({ error: "Você não gerencia esta turma" }, { status: 403 });

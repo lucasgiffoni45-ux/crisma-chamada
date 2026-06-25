@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, podeGerenciarTurma, registrarLog } from "@/lib/auth";
+import { emailValido } from "@/lib/validar";
 import { prisma } from "@/lib/prisma";
 
 // PATCH: edita nome, contato, idade e/ou e-mail do aluno.
@@ -17,6 +18,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const b = await req.json();
   const { nome, email, contato, idade } = b;
+  if (email && !emailValido(email)) {
+    return NextResponse.json({ error: "E-mail inválido" }, { status: 400 });
+  }
   const data: any = {};
   if (nome !== undefined) data.nome = nome;
   if (email !== undefined) data.email = email ? String(email).toLowerCase() : null;

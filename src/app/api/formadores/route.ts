@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, isCoordenadora, registrarLog, orgIdDe } from "@/lib/auth";
 import { podeEscrever } from "@/lib/assinatura";
+import { emailValido } from "@/lib/validar";
 import { prisma } from "@/lib/prisma";
 
 // GET: lista os formadores da organização da coordenadora.
@@ -34,8 +35,8 @@ export async function POST(req: NextRequest) {
   const orgId = orgIdDe(session);
   if (!orgId) return NextResponse.json({ error: "Coordenadora sem organização" }, { status: 400 });
   const { nome, email, turmaId } = await req.json();
-  if (!email) return NextResponse.json({ error: "E-mail é obrigatório" }, { status: 400 });
-  const emailLower = email.toLowerCase();
+  if (!email || !emailValido(email)) return NextResponse.json({ error: "Informe um e-mail válido" }, { status: 400 });
+  const emailLower = email.toLowerCase().trim();
 
   // Não permite "roubar" um usuário que já é dono/coordenadora de outra organização.
   const existente = await prisma.user.findUnique({ where: { email: emailLower } });
