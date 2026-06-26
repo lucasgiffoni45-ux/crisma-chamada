@@ -23,7 +23,7 @@ export const SEGMENTOS: Record<Segmento, Rotulos> = {
     produto: "Crisma — Chamada", emblema: "✝",
     aluno: "aluno", alunos: "alunos", turma: "turma", turmas: "turmas",
     encontro: "encontro", encontros: "encontros", formador: "formador", formadores: "formadores",
-    coordenador: "coordenadora", presenca: "presença", mostrarSacramentos: true,
+    coordenador: "coordenador(a)", presenca: "presença", mostrarSacramentos: true,
   },
   escola: {
     produto: "Chamada Escolar", emblema: "🏫",

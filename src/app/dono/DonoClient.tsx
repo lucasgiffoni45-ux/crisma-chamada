@@ -30,7 +30,7 @@ export default function DonoClient({
 }) {
   const [aba, setAba] = useState<"visao" | "coordenadoras" | "assinaturas" | "registro">("visao");
 
-  const rotulo = (a: typeof aba) => (a === "visao" ? "Visão geral" : a === "coordenadoras" ? "Coordenadoras" : a === "assinaturas" ? "Assinaturas" : "Registro");
+  const rotulo = (a: typeof aba) => (a === "visao" ? "Visão geral" : a === "coordenadoras" ? "Coordenadores(as)" : a === "assinaturas" ? "Assinaturas" : "Registro");
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
       <PageHeader titulo="Painel do Dono" selo="Dono" subtitulo={`Olá, ${nome}. Acesso total à plataforma.`} right={<SairLink />} />
@@ -163,7 +163,7 @@ function AbaCoordenadoras({ inicial }: { inicial: Coord[] }) {
   }
 
   async function remover(id: string) {
-    if (!confirm("Remover esta coordenadora?")) return;
+    if (!confirm("Remover este(a) coordenador(a)?")) return;
     await fetch("/api/coordenadoras", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -176,7 +176,7 @@ function AbaCoordenadoras({ inicial }: { inicial: Coord[] }) {
     <div className="space-y-4">
       <Card className="p-4">
         <form onSubmit={adicionar} className="flex flex-col gap-3">
-          <SectionTitle>Nova coordenadora</SectionTitle>
+          <SectionTitle>Novo(a) coordenador(a)</SectionTitle>
           <input type="text" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)}
             className="border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
           <input type="email" placeholder="E-mail (conta Google)" value={email} required onChange={(e) => setEmail(e.target.value)}
@@ -187,7 +187,7 @@ function AbaCoordenadoras({ inicial }: { inicial: Coord[] }) {
       </Card>
 
       <Card className="divide-y divide-stone-100">
-        {coords.length === 0 && <EmptyState icon="⭐" titulo="Nenhuma coordenadora ainda" />}
+        {coords.length === 0 && <EmptyState icon="⭐" titulo="Nenhum(a) coordenador(a) ainda" />}
         {coords.map((c) => (
           <div key={c.id} className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">

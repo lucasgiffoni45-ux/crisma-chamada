@@ -27,6 +27,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "É necessário aceitar o uso dos dados (LGPD)." }, { status: 400 });
   }
 
+  // Foto: opcional; aceita só imagem (data URL) e limita o tamanho.
+  let foto: string | null = null;
+  if (b.fotoBase64) {
+    if (typeof b.fotoBase64 !== "string" || !b.fotoBase64.startsWith("data:image/") || b.fotoBase64.length > 500000) {
+      return NextResponse.json({ error: "Foto inválida ou muito grande." }, { status: 400 });
+    }
+    foto = b.fotoBase64;
+  }
+
   await prisma.inscricao.create({
     data: {
       orgId: org.id,
@@ -42,6 +51,7 @@ export async function POST(req: NextRequest) {
       endereco: limitar(b.endereco, 200),
       estadoCivil: limitar(b.estadoCivil, 40),
       serieEscolar: limitar(b.serieEscolar, 60),
+      fotoBase64: foto,
     },
   });
   return NextResponse.json({ ok: true });

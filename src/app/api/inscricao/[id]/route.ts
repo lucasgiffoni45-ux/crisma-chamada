@@ -41,7 +41,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           dataNascimento: insc.dataNascimento, sacramentos: insc.sacramentos,
           alergias: insc.alergias, necessidades: insc.necessidades,
           nomePai: insc.nomePai, nomeMae: insc.nomeMae, endereco: insc.endereco,
-          estadoCivil: insc.estadoCivil, serieEscolar: insc.serieEscolar, turmaId,
+          estadoCivil: insc.estadoCivil, serieEscolar: insc.serieEscolar,
+          fotoBase64: insc.fotoBase64, turmaId,
         },
       });
     } catch {

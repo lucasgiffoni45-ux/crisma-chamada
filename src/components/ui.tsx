@@ -27,6 +27,14 @@ export function Avatar({ nome, size = 36 }: { nome: string; size?: number }) {
   );
 }
 
+// Mostra a foto se houver; senão, cai no avatar de iniciais.
+export function FotoOuAvatar({ nome, foto, size = 36 }: { nome: string; foto?: string | null; size?: number }) {
+  if (foto) {
+    return <img src={foto} alt={nome} className="inline-block shrink-0 rounded-full object-cover ring-1 ring-stone-200" style={{ width: size, height: size }} />;
+  }
+  return <Avatar nome={nome} size={size} />;
+}
+
 const TONS: Record<string, string> = {
   violet: "bg-violet-50 text-violet-700 ring-violet-200",
   amber: "bg-amber-50 text-amber-700 ring-amber-200",

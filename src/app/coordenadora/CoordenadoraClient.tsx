@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { BarChart, DonutTaxa } from "@/components/Charts";
-import { PageHeader, SairLink, SectionTitle, Card, Botao, Badge, Avatar, EmptyState, LogTimeline, Rodape } from "@/components/ui";
+import { PageHeader, SairLink, SectionTitle, Card, Botao, Badge, Avatar, FotoOuAvatar, EmptyState, LogTimeline, Rodape } from "@/components/ui";
 
 type Formador = { id: string; name: string | null; email: string | null; turmas: { turmaId: string }[] };
 type Turma = {
@@ -18,6 +18,7 @@ type AlunoDetalhe = {
   id: string; nome: string; email: string | null; contato: string | null; idade: number | null;
   dataNascimento: string | null; sacramentos: string | null; alergias: string | null; necessidades: string | null;
   nomePai: string | null; nomeMae: string | null; endereco: string | null; estadoCivil: string | null; serieEscolar: string | null; telefone: string | null;
+  fotoBase64: string | null;
   turma: { nome: string };
 };
 
@@ -54,7 +55,7 @@ export default function CoordenadoraClient({ turmasIniciais, formadoresIniciais,
   const rotulo = (a: typeof aba) => (a === "geral" ? "Visão geral" : a === "turmas" ? "Turmas" : a === "formadores" ? "Formadores" : a === "alunos" ? "Alunos" : a === "inscricoes" ? "Inscrições" : a === "calendario" ? "Calendário" : a === "historico" ? "Histórico" : "Registro");
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
-      <PageHeader titulo="Painel da Coordenadora" selo="Coordenadora" right={<SairLink />} />
+      <PageHeader titulo="Painel do Coordenador(a)" selo="Coordenador(a)" right={<SairLink />} />
 
       {assinatura && (!assinatura.ativa || (assinatura.diasRestantes != null && assinatura.diasRestantes <= 7)) && (
         <a href="/assinatura" className={`mb-4 flex items-center justify-between gap-2 rounded-2xl px-4 py-3 ring-1 ${assinatura.ativa ? "bg-amber-50 ring-amber-200 text-amber-900" : "bg-rose-50 ring-rose-200 text-rose-900"}`}>
@@ -260,7 +261,7 @@ function AbaAlunos({ alunos }: { alunos: AlunoDetalhe[] }) {
             {lista.map((a) => (
               <div key={a.id} className="px-4 py-2.5">
                 <button onClick={() => setAberto(aberto === a.id ? null : a.id)} className="w-full flex items-center gap-3 text-left">
-                  <Avatar nome={a.nome} size={34} />
+                  <FotoOuAvatar nome={a.nome} foto={a.fotoBase64} size={40} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-stone-800 truncate">{a.nome}{a.idade ? <span className="text-stone-400 font-normal">, {a.idade}</span> : ""}</p>
                     {!a.email && <Badge tom="amber">sem e-mail</Badge>}
@@ -352,7 +353,7 @@ function AbaInscricoes({ inicial, turmas }: { inicial: EstadoInscricao; turmas: 
       {pendentes && pendentes.map((i) => (
         <Card key={i.id} className="p-4">
           <div className="flex items-start gap-3">
-            <Avatar nome={i.nome} size={36} />
+            <FotoOuAvatar nome={i.nome} foto={i.fotoBase64} size={48} />
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm text-stone-800">{i.nome}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 text-xs text-stone-500 mt-1">

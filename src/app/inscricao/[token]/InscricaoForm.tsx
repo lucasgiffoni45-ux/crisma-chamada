@@ -4,12 +4,42 @@ import { useState } from "react";
 import { Cruz, Card } from "@/components/ui";
 import type { Rotulos } from "@/lib/segmentos";
 
+// Reduz a imagem no navegador (máx 400px, JPEG) antes de enviar — fica leve e privada.
+function reduzirImagem(file: File, max = 400): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const escala = Math.min(1, max / Math.max(img.width, img.height));
+        const w = Math.round(img.width * escala), h = Math.round(img.height * escala);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d")?.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function InscricaoForm({ token, orgNome, rotulos }: { token: string; orgNome: string; rotulos: Rotulos }) {
   const [f, setF] = useState<Record<string, string>>({});
   const [consent, setConsent] = useState(false);
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [ok, setOk] = useState(false);
+  const [foto, setFoto] = useState("");
+  const [consentFoto, setConsentFoto] = useState(false);
+
+  async function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try { setFoto(await reduzirImagem(file)); } catch { setErro("Não consegui ler a imagem."); }
+  }
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setF((p) => ({ ...p, [k]: e.target.value }));
   const input = "border border-stone-300 rounded-xl px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-violet-400";
@@ -21,7 +51,7 @@ export default function InscricaoForm({ token, orgNome, rotulos }: { token: stri
     setEnviando(true);
     const res = await fetch("/api/inscricao", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, consentimento: consent, ...f }),
+      body: JSON.stringify({ token, consentimento: consent, fotoBase64: consentFoto && foto ? foto : null, ...f }),
     });
     const data = await res.json();
     if (res.ok) setOk(true);
@@ -75,6 +105,21 @@ export default function InscricaoForm({ token, orgNome, rotulos }: { token: stri
             <Campo label="Nome da mãe"><input className={input} value={f.nomeMae ?? ""} onChange={set("nomeMae")} /></Campo>
           </div>
           <Campo label="Endereço"><input className={input} value={f.endereco ?? ""} onChange={set("endereco")} /></Campo>
+
+          {/* Foto 3x4 — opcional, com consentimento de imagem próprio */}
+          <div className="rounded-xl bg-stone-50 ring-1 ring-stone-200 p-3 mt-1">
+            <p className="text-xs font-semibold text-stone-600">Foto 3x4 (opcional)</p>
+            <label className="flex items-start gap-2 text-xs text-stone-600 mt-1">
+              <input type="checkbox" checked={consentFoto} onChange={(e) => setConsentFoto(e.target.checked)} className="mt-0.5" />
+              <span>Autorizo o uso da <b>foto</b> do(a) {rotulos.aluno} apenas pela coordenação, conforme a Política de Privacidade.</span>
+            </label>
+            {consentFoto && (
+              <div className="mt-2 flex items-center gap-3">
+                <input type="file" accept="image/*" capture="user" onChange={escolherFoto} className="text-xs" />
+                {foto && <img src={foto} alt="prévia" className="w-14 h-16 object-cover rounded-lg ring-1 ring-stone-300" />}
+              </div>
+            )}
+          </div>
 
           <label className="flex items-start gap-2 text-xs text-stone-600 mt-1">
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5" />

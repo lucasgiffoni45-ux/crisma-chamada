@@ -95,6 +95,7 @@ model Inscricao {
   endereco       String?
   estadoCivil    String?
   serieEscolar   String?
+  fotoBase64     String?  @db.Text // foto enviada pelo responsável (opcional)
   status         String   @default("pendente") // pendente | aprovada | recusada
   createdAt      DateTime @default(now())
 }
@@ -147,6 +148,7 @@ model Crismando {
   estadoCivil String?
   serieEscolar String?
   telefone    String?
+  fotoBase64  String?        @db.Text // foto 3x4 (comprimida) — visível só à coordenação
   turmaId     String
   createdAt   DateTime       @default(now())
   turma       Turma          @relation(fields: [turmaId], references: [id], onDelete: Cascade)
