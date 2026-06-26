@@ -27,7 +27,8 @@ export default function PrivacidadePage() {
         <Secao titulo="2. Quais dados coletamos">
           Nome, e-mail, contato/WhatsApp, idade e data de nascimento, sacramentos recebidos, informações de saúde
           relevantes (alergias e necessidades especiais), nome dos pais/responsáveis, endereço, estado civil,
-          série escolar e os registros de presença nos encontros.
+          série escolar e os registros de presença nos encontros. Opcionalmente, mediante <b>consentimento específico
+          do responsável</b>, uma <b>foto</b> do(a) aluno(a) — usada apenas para identificação pela coordenação.
         </Secao>
 
         <Secao titulo="3. Para que usamos">
@@ -47,7 +48,8 @@ export default function PrivacidadePage() {
             <li><b>Coordenadora</b>: vê apenas os dados da <b>sua organização</b> — nunca de outra paróquia/coordenação.</li>
             <li><b>Administração do sistema</b>: acesso técnico para manutenção.</li>
           </ul>
-          Cada organização é <b>isolada</b>: uma coordenadora não acessa os dados de outra.
+          Cada organização é <b>isolada</b>: um(a) coordenador(a) não acessa os dados de outra. A <b>foto</b> do(a)
+          aluno(a), quando fornecida, é visível <b>apenas à coordenação</b> (não ao formador).
         </Secao>
 
         <Secao titulo="6. Compartilhamento">
