@@ -95,6 +95,10 @@ model Inscricao {
   endereco       String?
   estadoCivil    String?
   serieEscolar   String?
+  telefone       String?
+  comunidade     String?
+  comunidadeEncontros String?
+  assinaturaResponsavel String?
   fotoBase64     String?  @db.Text // foto enviada pelo responsável (opcional)
   status         String   @default("pendente") // pendente | aprovada | recusada
   createdAt      DateTime @default(now())
@@ -148,6 +152,8 @@ model Crismando {
   estadoCivil String?
   serieEscolar String?
   telefone    String?
+  comunidade  String?        // comunidade que frequenta
+  comunidadeEncontros String? // comunidade onde terá os encontros
   fotoBase64  String?        @db.Text // foto 3x4 (comprimida) — visível só à coordenação
   turmaId     String
   createdAt   DateTime       @default(now())

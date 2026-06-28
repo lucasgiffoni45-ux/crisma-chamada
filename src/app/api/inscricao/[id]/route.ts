@@ -42,6 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           alergias: insc.alergias, necessidades: insc.necessidades,
           nomePai: insc.nomePai, nomeMae: insc.nomeMae, endereco: insc.endereco,
           estadoCivil: insc.estadoCivil, serieEscolar: insc.serieEscolar,
+          telefone: insc.telefone, comunidade: insc.comunidade, comunidadeEncontros: insc.comunidadeEncontros,
           fotoBase64: insc.fotoBase64, turmaId,
         },
       });

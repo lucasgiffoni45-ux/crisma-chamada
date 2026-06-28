@@ -51,6 +51,10 @@ export async function POST(req: NextRequest) {
       endereco: limitar(b.endereco, 200),
       estadoCivil: limitar(b.estadoCivil, 40),
       serieEscolar: limitar(b.serieEscolar, 60),
+      telefone: limitar(b.telefone, 80),
+      comunidade: limitar(b.comunidade, 120),
+      comunidadeEncontros: limitar(b.comunidadeEncontros, 120),
+      assinaturaResponsavel: limitar(b.assinaturaResponsavel, 120),
       fotoBase64: foto,
     },
   });

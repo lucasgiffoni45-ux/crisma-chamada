@@ -18,6 +18,7 @@ type AlunoDetalhe = {
   id: string; nome: string; email: string | null; contato: string | null; idade: number | null;
   dataNascimento: string | null; sacramentos: string | null; alergias: string | null; necessidades: string | null;
   nomePai: string | null; nomeMae: string | null; endereco: string | null; estadoCivil: string | null; serieEscolar: string | null; telefone: string | null;
+  comunidade: string | null; comunidadeEncontros: string | null;
   fotoBase64: string | null;
   turma: { nome: string };
 };
@@ -279,6 +280,8 @@ function AbaAlunos({ alunos }: { alunos: AlunoDetalhe[] }) {
                     <Campo r="Necessidades" v={a.necessidades} />
                     <Campo r="Estado civil" v={a.estadoCivil} />
                     <Campo r="Série escolar" v={a.serieEscolar} />
+                    <Campo r="Comunidade" v={a.comunidade} />
+                    <Campo r="Comunidade dos encontros" v={a.comunidadeEncontros} />
                     <Campo r="Nome do pai" v={a.nomePai} />
                     <Campo r="Nome da mãe" v={a.nomeMae} />
                     <Campo r="Endereço" v={a.endereco} />
@@ -360,6 +363,7 @@ function AbaInscricoes({ inicial, turmas }: { inicial: EstadoInscricao; turmas: 
                 <Campo r="E-mail" v={i.email} />
                 <Campo r="Contato" v={i.contato} />
                 <Campo r="Nascimento" v={i.dataNascimento} />
+                <Campo r="Comunidade" v={i.comunidade} />
                 <Campo r="Sacramentos" v={i.sacramentos} />
                 <Campo r="Alergias" v={i.alergias} />
                 <Campo r="Mãe" v={i.nomeMae} />

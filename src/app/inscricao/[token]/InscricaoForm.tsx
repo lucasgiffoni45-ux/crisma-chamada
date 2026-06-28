@@ -87,24 +87,27 @@ export default function InscricaoForm({ token, orgNome, rotulos }: { token: stri
           {/* Honeypot anti-spam (oculto) */}
           <input name="website" tabIndex={-1} autoComplete="off" onChange={(e) => setF((p) => ({ ...p, website: e.target.value }))} className="hidden" />
 
-          <Campo label={`Nome completo do ${rotulos.aluno}`} obrigatorio><input required className={input} value={f.nome ?? ""} onChange={set("nome")} /></Campo>
-          <div className="grid grid-cols-2 gap-2">
-            <Campo label="Data de nascimento"><input className={input} placeholder="DD/MM/AAAA" value={f.dataNascimento ?? ""} onChange={set("dataNascimento")} /></Campo>
-            <Campo label="WhatsApp / contato"><input className={input} value={f.contato ?? ""} onChange={set("contato")} /></Campo>
-          </div>
           <Campo label="E-mail (para login no app)"><input type="email" className={input} value={f.email ?? ""} onChange={set("email")} /></Campo>
-          {rotulos.mostrarSacramentos && (
-            <Campo label="Sacramentos já recebidos"><input className={input} placeholder="Ex.: Batismo, Eucaristia" value={f.sacramentos ?? ""} onChange={set("sacramentos")} /></Campo>
-          )}
-          <div className="grid grid-cols-2 gap-2">
-            <Campo label="Alergias"><input className={input} value={f.alergias ?? ""} onChange={set("alergias")} /></Campo>
-            <Campo label="Necessidades especiais"><input className={input} value={f.necessidades ?? ""} onChange={set("necessidades")} /></Campo>
-          </div>
+          <Campo label="Qual comunidade irá ter os encontros?"><input className={input} value={f.comunidadeEncontros ?? ""} onChange={set("comunidadeEncontros")} /></Campo>
+          <Campo label={`Nome completo (de quem irá frequentar os encontros)`} obrigatorio><input required className={input} value={f.nome ?? ""} onChange={set("nome")} /></Campo>
+          <Campo label="Data de nascimento"><input className={input} placeholder="DD/MM/AAAA" value={f.dataNascimento ?? ""} onChange={set("dataNascimento")} /></Campo>
           <div className="grid grid-cols-2 gap-2">
             <Campo label="Nome do pai"><input className={input} value={f.nomePai ?? ""} onChange={set("nomePai")} /></Campo>
             <Campo label="Nome da mãe"><input className={input} value={f.nomeMae ?? ""} onChange={set("nomeMae")} /></Campo>
           </div>
-          <Campo label="Endereço"><input className={input} value={f.endereco ?? ""} onChange={set("endereco")} /></Campo>
+          <div className="grid grid-cols-2 gap-2">
+            <Campo label="Grau escolar"><input className={input} value={f.serieEscolar ?? ""} onChange={set("serieEscolar")} /></Campo>
+            <Campo label="Estado civil"><input className={input} value={f.estadoCivil ?? ""} onChange={set("estadoCivil")} /></Campo>
+          </div>
+          <Campo label="Possui necessidade especial? Se sim, qual?"><input className={input} value={f.necessidades ?? ""} onChange={set("necessidades")} /></Campo>
+          <Campo label="Possui alergia? Se sim, a quê?"><input className={input} value={f.alergias ?? ""} onChange={set("alergias")} /></Campo>
+          {rotulos.mostrarSacramentos && (
+            <Campo label="Sacramentos recebidos"><input className={input} placeholder="Ex.: Batismo, Eucaristia" value={f.sacramentos ?? ""} onChange={set("sacramentos")} /></Campo>
+          )}
+          <Campo label="Endereço (rua, bairro e número)"><input className={input} value={f.endereco ?? ""} onChange={set("endereco")} /></Campo>
+          <Campo label="Comunidade que frequenta"><input className={input} value={f.comunidade ?? ""} onChange={set("comunidade")} /></Campo>
+          <Campo label="Telefone (pode incluir nome do responsável pelo número)"><input className={input} value={f.telefone ?? ""} onChange={set("telefone")} /></Campo>
+          <Campo label="Contato de WhatsApp"><input className={input} value={f.contato ?? ""} onChange={set("contato")} /></Campo>
 
           {/* Foto 3x4 — opcional, com consentimento de imagem próprio */}
           <div className="rounded-xl bg-stone-50 ring-1 ring-stone-200 p-3 mt-1">
@@ -120,6 +123,10 @@ export default function InscricaoForm({ token, orgNome, rotulos }: { token: stri
               </div>
             )}
           </div>
+
+          <Campo label="Assinatura do responsável (digite o nome completo)" obrigatorio>
+            <input required className={input} value={f.assinaturaResponsavel ?? ""} onChange={set("assinaturaResponsavel")} placeholder="Nome completo de quem está preenchendo" />
+          </Campo>
 
           <label className="flex items-start gap-2 text-xs text-stone-600 mt-1">
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5" />
